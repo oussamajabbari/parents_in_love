@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "934913489525",
+    "project_id": "parents-in-love",
+    "storage_bucket": "parents-in-love.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:934913489525:android:84653c65c284e1e05a563c",
+        "android_client_info": {
+          "package_name": "com.example.parents_in_love"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCM59iJHFC4J5TDn6ipHNS0OmK8ycP9h90"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

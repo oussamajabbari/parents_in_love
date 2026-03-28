@@ -1,0 +1,32 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "parents-in-love",
+          "appId": "1:934913489525:android:84653c65c284e1e05a563c",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "parents-in-love",
+          "configurations": {
+            "android": "1:934913489525:android:84653c65c284e1e05a563c",
+            "ios": "1:934913489525:ios:13e48f70a8aa53e55a563c",
+            "web": "1:934913489525:web:b3aa930206a4155b5a563c"
+          }
+        }
+      }
+    }
+  },
+  "emulators": {
+    "firestore": {
+      "port": 8080
+    },
+    "ui": {
+      "enabled": true
+    },
+    "singleProjectMode": true
+  }
+}
