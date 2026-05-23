@@ -4,7 +4,8 @@ import 'package:firebase_ui_localizations/firebase_ui_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:parents_in_love/auth_gate.dart';
+import 'package:parents_in_love/app_top.dart';
+import 'package:parents_in_love/theme/app_theme.dart';
 import 'firebase_options.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -30,8 +31,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Parents in Love app',
-      theme: ThemeData(colorScheme: .fromSeed(seedColor: Colors.deepPurple)),
-      home: Scaffold(body: SafeArea(child: AuthGate())),
+      theme: AppTheme.lightTheme, // Light mode theme
+      themeMode: ThemeMode.light, // Follows system setting
+      home: AppTop(),
       localizationsDelegates: [
         GlobalMaterialLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,

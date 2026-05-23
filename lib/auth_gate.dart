@@ -1,7 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart' hide EmailAuthProvider;
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:parents_in_love/onboarding_configuration.dart';
+import 'package:parents_in_love/onboarding/onboarding.dart';
+import 'package:parents_in_love/theme/app_constants.dart';
 
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
@@ -14,9 +15,19 @@ class AuthGate extends StatelessWidget {
         if (snapshot.hasError) {
           return Text('Auth stream error !');
         } else if (!snapshot.hasData) {
-          return SignInScreen(providers: [EmailAuthProvider()]);
+          return Padding(
+            padding: const EdgeInsets.symmetric(
+              vertical: AppConstants.spacingXL,
+              horizontal: AppConstants.spacingMD,
+            ),
+            child: SignInScreen(
+              providers: [EmailAuthProvider()],
+              headerBuilder: (context, constraints, shrinkOffset) =>
+                  Image.asset('assets/parents_in_love_logo.png'),
+            ),
+          );
         } else {
-          return OnboardingConfiguration();
+          return Onboarding();
         }
       },
     );
