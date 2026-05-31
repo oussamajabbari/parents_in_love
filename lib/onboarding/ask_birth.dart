@@ -3,16 +3,16 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-class AskAge extends StatefulWidget {
-  const AskAge({super.key});
+class AskBirth extends StatefulWidget {
+  const AskBirth({super.key});
 
   @override
-  AskAgeState createState() {
-    return AskAgeState();
+  AskBirthState createState() {
+    return AskBirthState();
   }
 }
 
-class AskAgeState extends State<AskAge> {
+class AskBirthState extends State<AskBirth> {
   final _formKey = GlobalKey<FormState>();
   final myController = TextEditingController(text: '64');
   bool enableNextButton = false;
