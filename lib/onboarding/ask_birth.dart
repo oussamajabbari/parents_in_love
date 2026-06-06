@@ -1,10 +1,17 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:parents_in_love/theme/app_constants.dart';
 
 class AskBirth extends StatefulWidget {
-  const AskBirth({super.key});
+  final VoidCallback onPreviousPressed;
+  final VoidCallback onNextPressed;
+
+  const AskBirth({
+    super.key,
+    required this.onPreviousPressed,
+    required this.onNextPressed,
+  });
 
   @override
   AskBirthState createState() {
@@ -13,15 +20,8 @@ class AskBirth extends StatefulWidget {
 }
 
 class AskBirthState extends State<AskBirth> {
-  final _formKey = GlobalKey<FormState>();
-  final myController = TextEditingController(text: '64');
   bool enableNextButton = false;
-
-  @override
-  void dispose() {
-    myController.dispose();
-    super.dispose();
-  }
+  DateTime? selectedDate;
 
   @override
   Widget build(BuildContext context) {
@@ -30,55 +30,53 @@ class AskBirthState extends State<AskBirth> {
         .collection('users_parameters')
         .doc(userUid);
 
-    return Form(
-      key: _formKey,
-      autovalidateMode: AutovalidateMode.always,
+    return Card(
+      color: Theme.of(context).colorScheme.surface,
+      elevation: 5,
       child: Padding(
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.symmetric(horizontal: AppConstants.spacingLG),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: <Widget>[
-            Text('Quel âge avez-vous ?'),
-            TextFormField(
-              controller: myController,
-              keyboardType: TextInputType.number,
-              inputFormatters: <TextInputFormatter>[
-                FilteringTextInputFormatter.digitsOnly,
-              ],
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Veuillez saisir votre âge';
-                }
-                return null;
-              },
-              onChanged: (value) {
+            Text(
+              'Quelle est votre date de naissance ?',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+            CalendarDatePicker(
+              initialDate: DateTime.now(),
+              firstDate: DateTime.now().subtract(Duration(days: 130 * 365)),
+              lastDate: DateTime.now(),
+              onDateChanged: (date) => {
                 setState(() {
-                  enableNextButton =
-                      _formKey.currentState != null &&
-                      _formKey.currentState!.validate();
-                });
+                  selectedDate = date;
+                }),
               },
             ),
+            selectedDate != null && !isAdult()
+                ? Text(
+                    'Age minimum 18 ans',
+                    style: TextStyle(color: Colors.red),
+                  )
+                : Container(),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 OutlinedButton(
                   onPressed: () {
-                    userDoc.set({
-                      'onboarding_stage': 'intro',
-                    }, SetOptions(merge: true));
+                    widget.onPreviousPressed();
                   },
                   child: Text('Précédent'),
                 ),
                 SizedBox(width: 8),
                 ElevatedButton(
-                  onPressed: enableNextButton
+                  onPressed: selectedDate != null && isAdult()
                       ? () {
-                          var age = myController.text;
                           userDoc.set({
-                            'age': age,
-                            'onboarding_stage': 'ask_name',
+                            'birthDate': Timestamp.fromDate(selectedDate!),
                           }, SetOptions(merge: true));
+                          widget.onNextPressed();
                         }
                       : null,
                   child: const Text('Suivant'),
@@ -89,5 +87,12 @@ class AskBirthState extends State<AskBirth> {
         ),
       ),
     );
+  }
+
+  bool isAdult() {
+    return selectedDate != null &&
+        selectedDate!.isBefore(
+          DateTime.now().subtract(Duration(days: 18 * 365)),
+        );
   }
 }

@@ -1,10 +1,10 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:parents_in_love/theme/app_constants.dart';
 
 class Intro extends StatefulWidget {
-  const Intro({super.key});
+  final VoidCallback onNextPressed;
+
+  const Intro({super.key, required this.onNextPressed});
 
   @override
   IntroState createState() {
@@ -47,14 +47,15 @@ class IntroState extends State<Intro> {
                 children: [
                   ElevatedButton(
                     onPressed: () {
-                      final String userUid =
+                      /* final String userUid =
                           FirebaseAuth.instance.currentUser!.uid;
                       final userDoc = FirebaseFirestore.instance
                           .collection('users_parameters')
                           .doc(userUid);
                       userDoc.set({
                         'onboarding_stage': 'ask_age',
-                      }, SetOptions(merge: true));
+                      }, SetOptions(merge: true)); */
+                      widget.onNextPressed();
                     },
                     child: const Text('Suivant'),
                   ),

@@ -24,6 +24,20 @@ class _OnboardingGateState extends State<OnboardingGate> {
     super.dispose();
   }
 
+  void _goToNextPage() {
+    _pageController.nextPage(
+      duration: Duration(milliseconds: 300),
+      curve: Curves.ease,
+    );
+  }
+
+  void _goToPrevioustPage() {
+    _pageController.previousPage(
+      duration: Duration(milliseconds: 300),
+      curve: Curves.ease,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final String userUid = FirebaseAuth.instance.currentUser!.uid;
@@ -42,16 +56,24 @@ class _OnboardingGateState extends State<OnboardingGate> {
           if (true) {
             return Padding(
               padding: const EdgeInsets.fromLTRB(
-                AppConstants.spacingLG,
+                AppConstants.spacingMD,
                 0,
-                AppConstants.spacingLG,
-                AppConstants.spacingLG,
+                AppConstants.spacingMD,
+                AppConstants.spacingMD,
               ),
               child: Stack(
                 children: [
                   PageView(
                     controller: _pageController,
-                    children: [Intro(), AskBirth(), AskName()],
+                    //physics: const NeverScrollableScrollPhysics(),
+                    children: [
+                      Intro(onNextPressed: _goToNextPage),
+                      AskBirth(
+                        onPreviousPressed: _goToPrevioustPage,
+                        onNextPressed: _goToNextPage,
+                      ),
+                      AskName(),
+                    ],
                   ),
                   Container(
                     alignment: Alignment(0, 0.8),
@@ -59,10 +81,6 @@ class _OnboardingGateState extends State<OnboardingGate> {
                       controller: _pageController,
                       count: 3,
                     ),
-                  ),
-                  Container(
-                    alignment: Alignment(0, 0.9),
-                    child: Text(usersParameters.toString()),
                   ),
                 ],
               ),
