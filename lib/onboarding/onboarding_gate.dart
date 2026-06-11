@@ -72,7 +72,10 @@ class _OnboardingGateState extends State<OnboardingGate> {
                         onPreviousPressed: _goToPrevioustPage,
                         onNextPressed: _goToNextPage,
                       ),
-                      AskName(),
+                      AskName(
+                        onPreviousPressed: _goToPrevioustPage,
+                        onNextPressed: _goToNextPage,
+                      ),
                     ],
                   ),
                   Container(

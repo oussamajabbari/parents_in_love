@@ -1,9 +1,17 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:parents_in_love/theme/app_constants.dart';
 
 class AskName extends StatefulWidget {
-  const AskName({super.key});
+  final VoidCallback onPreviousPressed;
+  final VoidCallback onNextPressed;
+
+  const AskName({
+    super.key,
+    required this.onPreviousPressed,
+    required this.onNextPressed,
+  });
 
   @override
   AskNameState createState() {
@@ -32,55 +40,64 @@ class AskNameState extends State<AskName> {
     return Form(
       key: _formKey,
       autovalidateMode: AutovalidateMode.always,
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text('Quel est votre prénom ?'),
-            TextFormField(
-              controller: myController,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Veuillez saisir votre prénom';
-                }
-                return null;
-              },
-              onChanged: (value) {
-                setState(() {
-                  enableNextButton =
-                      _formKey.currentState != null &&
-                      _formKey.currentState!.validate();
-                });
-              },
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                OutlinedButton(
-                  onPressed: () {
-                    userDoc.set({
-                      'onboarding_stage': 'ask_age',
-                    }, SetOptions(merge: true));
-                  },
-                  child: Text('Précédent'),
+      child: Card(
+        color: Theme.of(context).colorScheme.surface,
+        elevation: 5,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppConstants.spacingLG,
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: <Widget>[
+              Text(
+                'Quel est votre prénom ?',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
-                SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: enableNextButton
-                      ? () {
-                          var name = myController.text;
-                          userDoc.set({
-                            'name': name,
-                            'onboarding_stage': 'ask_age',
-                          }, SetOptions(merge: true));
-                        }
-                      : null,
-                  child: const Text('Suivant'),
-                ),
-              ],
-            ),
-          ],
+              ),
+              TextFormField(
+                controller: myController,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Veuillez saisir votre prénom';
+                  }
+                  return null;
+                },
+                onChanged: (value) {
+                  setState(() {
+                    enableNextButton =
+                        _formKey.currentState != null &&
+                        _formKey.currentState!.validate();
+                  });
+                },
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  OutlinedButton(
+                    onPressed: () {
+                      widget.onPreviousPressed();
+                    },
+                    child: Text('Précédent'),
+                  ),
+                  SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: enableNextButton
+                        ? () {
+                            var name = myController.text;
+                            userDoc.set({
+                              'name': name,
+                            }, SetOptions(merge: true));
+                            widget.onNextPressed();
+                          }
+                        : null,
+                    child: const Text('Suivant'),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
