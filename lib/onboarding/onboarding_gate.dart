@@ -76,7 +76,7 @@ class _OnboardingGateState extends State<OnboardingGate> {
                     ],
                   ),
                   Container(
-                    alignment: Alignment(0, 0.8),
+                    alignment: Alignment(0, 0.9),
                     child: SmoothPageIndicator(
                       controller: _pageController,
                       count: 3,

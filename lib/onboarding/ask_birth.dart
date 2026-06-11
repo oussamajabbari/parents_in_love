@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:parents_in_love/theme/app_constants.dart';
 
 class AskBirth extends StatefulWidget {
@@ -19,7 +20,8 @@ class AskBirth extends StatefulWidget {
   }
 }
 
-class AskBirthState extends State<AskBirth> {
+class AskBirthState extends State<AskBirth>
+    with AutomaticKeepAliveClientMixin<AskBirth> {
   bool enableNextButton = false;
   DateTime? selectedDate;
 
@@ -44,16 +46,26 @@ class AskBirthState extends State<AskBirth> {
                 color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
-            CalendarDatePicker(
-              initialDate: DateTime.now(),
-              firstDate: DateTime.now().subtract(Duration(days: 130 * 365)),
-              lastDate: DateTime.now(),
-              onDateChanged: (date) => {
-                setState(() {
-                  selectedDate = date;
-                }),
-              },
+            Card(
+              margin: EdgeInsets.all(0),
+              child: CalendarDatePicker(
+                initialDate: DateTime.now(),
+                firstDate: DateTime.now().subtract(Duration(days: 130 * 365)),
+                lastDate: DateTime.now(),
+                onDateChanged: (date) => {
+                  setState(() {
+                    selectedDate = date;
+                  }),
+                },
+              ),
             ),
+            selectedDate != null
+                ? Text(
+                    DateFormat.yMMMMEEEEd(
+                      Localizations.localeOf(context).languageCode,
+                    ).format(selectedDate!),
+                  )
+                : Container(),
             selectedDate != null && !isAdult()
                 ? Text(
                     'Age minimum 18 ans',
@@ -83,6 +95,7 @@ class AskBirthState extends State<AskBirth> {
                 ),
               ],
             ),
+            SizedBox(height: 20),
           ],
         ),
       ),
@@ -95,4 +108,7 @@ class AskBirthState extends State<AskBirth> {
           DateTime.now().subtract(Duration(days: 18 * 365)),
         );
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }
