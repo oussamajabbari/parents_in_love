@@ -3,26 +3,29 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:parents_in_love/theme/app_constants.dart';
 
-class AskName extends StatefulWidget {
+class AskSex extends StatefulWidget {
   final VoidCallback onPreviousPressed;
   final VoidCallback onNextPressed;
 
-  const AskName({
+  const AskSex({
     super.key,
     required this.onPreviousPressed,
     required this.onNextPressed,
   });
 
   @override
-  AskNameState createState() {
-    return AskNameState();
+  AskSexState createState() {
+    return AskSexState();
   }
 }
 
-class AskNameState extends State<AskName> {
+enum Sex { woman, man }
+
+class AskSexState extends State<AskSex> {
   final _formKey = GlobalKey<FormState>();
   final myController = TextEditingController();
   bool enableNextButton = false;
+  Sex? _sex;
 
   @override
   void dispose() {
@@ -51,26 +54,30 @@ class AskNameState extends State<AskName> {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: <Widget>[
               Text(
-                'Quel est votre prénom ?',
+                'Quel est votre sexe ?',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
-              TextFormField(
-                controller: myController,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Veuillez saisir votre prénom';
-                  }
-                  return null;
-                },
-                onChanged: (value) {
+              RadioGroup<Sex>(
+                groupValue: _sex,
+                onChanged: (Sex? value) {
                   setState(() {
-                    enableNextButton =
-                        _formKey.currentState != null &&
-                        _formKey.currentState!.validate();
+                    _sex = value;
                   });
                 },
+                child: const Column(
+                  children: <Widget>[
+                    ListTile(
+                      title: Text('Femme'),
+                      leading: Radio<Sex>(value: Sex.woman),
+                    ),
+                    ListTile(
+                      title: Text('Homme'),
+                      leading: Radio<Sex>(value: Sex.man),
+                    ),
+                  ],
+                ),
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,

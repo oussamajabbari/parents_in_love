@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:parents_in_love/home.dart';
 import 'package:parents_in_love/onboarding/ask_birth.dart';
 import 'package:parents_in_love/onboarding/ask_name.dart';
+import 'package:parents_in_love/onboarding/ask_sex.dart';
 import 'package:parents_in_love/onboarding/intro.dart';
 import 'package:parents_in_love/theme/app_constants.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
@@ -76,13 +77,17 @@ class _OnboardingGateState extends State<OnboardingGate> {
                         onPreviousPressed: _goToPrevioustPage,
                         onNextPressed: _goToNextPage,
                       ),
+                      AskSex(
+                        onPreviousPressed: _goToPrevioustPage,
+                        onNextPressed: _goToNextPage,
+                      ),
                     ],
                   ),
                   Container(
                     alignment: Alignment(0, 0.9),
                     child: SmoothPageIndicator(
                       controller: _pageController,
-                      count: 3,
+                      count: 4, // TODO change
                     ),
                   ),
                 ],

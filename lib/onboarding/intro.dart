@@ -47,14 +47,6 @@ class IntroState extends State<Intro> {
                 children: [
                   ElevatedButton(
                     onPressed: () {
-                      /* final String userUid =
-                          FirebaseAuth.instance.currentUser!.uid;
-                      final userDoc = FirebaseFirestore.instance
-                          .collection('users_parameters')
-                          .doc(userUid);
-                      userDoc.set({
-                        'onboarding_stage': 'ask_age',
-                      }, SetOptions(merge: true)); */
                       widget.onNextPressed();
                     },
                     child: const Text('Suivant'),
