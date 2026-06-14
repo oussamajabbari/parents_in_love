@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:parents_in_love/theme/app_constants.dart';
@@ -26,7 +27,12 @@ class AskBirthState extends State<AskBirth>
   DateTime? selectedDate;
 
   @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context);
+
     final String userUid = FirebaseAuth.instance.currentUser!.uid;
     final userDoc = FirebaseFirestore.instance
         .collection('users_parameters')
@@ -103,12 +109,13 @@ class AskBirthState extends State<AskBirth>
   }
 
   bool isAdult() {
-    return selectedDate != null &&
-        selectedDate!.isBefore(
-          DateTime.now().subtract(Duration(days: 18 * 365)),
-        );
+    if (kDebugMode) {
+      return selectedDate != null;
+    } else {
+      return selectedDate != null &&
+          selectedDate!.isBefore(
+            DateTime.now().subtract(Duration(days: 18 * 365)),
+          );
+    }
   }
-
-  @override
-  bool get wantKeepAlive => true;
 }

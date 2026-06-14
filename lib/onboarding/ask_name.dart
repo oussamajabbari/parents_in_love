@@ -19,7 +19,8 @@ class AskName extends StatefulWidget {
   }
 }
 
-class AskNameState extends State<AskName> {
+class AskNameState extends State<AskName>
+    with AutomaticKeepAliveClientMixin<AskName> {
   final _formKey = GlobalKey<FormState>();
   final myController = TextEditingController();
   bool enableNextButton = false;
@@ -31,7 +32,12 @@ class AskNameState extends State<AskName> {
   }
 
   @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context);
+
     final String userUid = FirebaseAuth.instance.currentUser!.uid;
     final userDoc = FirebaseFirestore.instance
         .collection('users_parameters')
@@ -86,6 +92,7 @@ class AskNameState extends State<AskName> {
                   ElevatedButton(
                     onPressed: enableNextButton
                         ? () {
+                            FocusManager.instance.primaryFocus?.unfocus();
                             var name = myController.text.trim();
                             userDoc.set({
                               'name': name,

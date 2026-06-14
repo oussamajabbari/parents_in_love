@@ -19,93 +19,128 @@ class AskSex extends StatefulWidget {
   }
 }
 
-enum Sex { woman, man }
+enum Sex {
+  woman('woman'),
+  man('man');
 
-class AskSexState extends State<AskSex> {
-  final _formKey = GlobalKey<FormState>();
-  final myController = TextEditingController();
+  const Sex(this.value);
+  final String value;
+}
+
+class AskSexState extends State<AskSex>
+    with AutomaticKeepAliveClientMixin<AskSex> {
   bool enableNextButton = false;
   Sex? _sex;
+  Sex? _lookinfForSex;
 
   @override
-  void dispose() {
-    myController.dispose();
-    super.dispose();
-  }
+  bool get wantKeepAlive => true;
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
+
     final String userUid = FirebaseAuth.instance.currentUser!.uid;
     final userDoc = FirebaseFirestore.instance
         .collection('users_parameters')
         .doc(userUid);
 
-    return Form(
-      key: _formKey,
-      autovalidateMode: AutovalidateMode.always,
-      child: Card(
-        color: Theme.of(context).colorScheme.surface,
-        elevation: 5,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppConstants.spacingLG,
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: <Widget>[
-              Text(
-                'Quel est votre sexe ?',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-              ),
-              RadioGroup<Sex>(
-                groupValue: _sex,
-                onChanged: (Sex? value) {
-                  setState(() {
-                    _sex = value;
-                  });
-                },
-                child: const Column(
-                  children: <Widget>[
-                    ListTile(
-                      title: Text('Femme'),
-                      leading: Radio<Sex>(value: Sex.woman),
-                    ),
-                    ListTile(
-                      title: Text('Homme'),
-                      leading: Radio<Sex>(value: Sex.man),
-                    ),
-                  ],
-                ),
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+    return Card(
+      color: Theme.of(context).colorScheme.surface,
+      elevation: 5,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AppConstants.spacingLG),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: <Widget>[
+            Card(
+              child: Column(
                 children: [
-                  OutlinedButton(
-                    onPressed: () {
-                      FocusManager.instance.primaryFocus?.unfocus();
-                      widget.onPreviousPressed();
-                    },
-                    child: Text('Précédent'),
+                  Text(
+                    'Quel est votre sexe ?',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
                   ),
-                  SizedBox(width: 8),
-                  ElevatedButton(
-                    onPressed: enableNextButton
-                        ? () {
-                            var name = myController.text.trim();
-                            userDoc.set({
-                              'name': name,
-                            }, SetOptions(merge: true));
-                            widget.onNextPressed();
-                          }
-                        : null,
-                    child: const Text('Suivant'),
+                  RadioGroup<Sex>(
+                    groupValue: _sex,
+                    onChanged: (Sex? value) {
+                      setState(() {
+                        _sex = value;
+                      });
+                    },
+                    child: const Column(
+                      children: <Widget>[
+                        RadioListTile<Sex>(
+                          title: Text('Femme'),
+                          value: Sex.woman,
+                        ),
+                        RadioListTile<Sex>(
+                          title: Text('Homme'),
+                          value: Sex.man,
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
-            ],
-          ),
+            ),
+            Card(
+              child: Column(
+                children: [
+                  Text(
+                    'Que recherchez-vous ?',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                  RadioGroup<Sex>(
+                    groupValue: _lookinfForSex,
+                    onChanged: (Sex? value) {
+                      setState(() {
+                        _lookinfForSex = value;
+                      });
+                    },
+                    child: const Column(
+                      children: <Widget>[
+                        RadioListTile<Sex>(
+                          title: Text('Femme'),
+                          value: Sex.woman,
+                        ),
+                        RadioListTile<Sex>(
+                          title: Text('Homme'),
+                          value: Sex.man,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                OutlinedButton(
+                  onPressed: () {
+                    widget.onPreviousPressed();
+                  },
+                  child: Text('Précédent'),
+                ),
+                SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: _sex != null && _lookinfForSex != null
+                      ? () {
+                          userDoc.set({
+                            'sex': _sex!.value,
+                          }, SetOptions(merge: true));
+                          widget.onNextPressed();
+                        }
+                      : null,
+                  child: const Text('Suivant'),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
