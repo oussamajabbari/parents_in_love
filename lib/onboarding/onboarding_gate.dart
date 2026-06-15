@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:parents_in_love/home.dart';
 import 'package:parents_in_love/onboarding/ask_birth.dart';
+import 'package:parents_in_love/onboarding/ask_child_custody.dart';
 import 'package:parents_in_love/onboarding/ask_name.dart';
 import 'package:parents_in_love/onboarding/ask_sex.dart';
 import 'package:parents_in_love/onboarding/intro.dart';
@@ -81,13 +82,17 @@ class _OnboardingGateState extends State<OnboardingGate> {
                         onPreviousPressed: _goToPrevioustPage,
                         onNextPressed: _goToNextPage,
                       ),
+                      AskChildCustody(
+                        onPreviousPressed: _goToPrevioustPage,
+                        onNextPressed: _goToNextPage,
+                      ),
                     ],
                   ),
                   Container(
                     alignment: Alignment(0, 0.9),
                     child: SmoothPageIndicator(
                       controller: _pageController,
-                      count: 4,
+                      count: 5,
                     ),
                   ),
                 ],
