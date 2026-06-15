@@ -21,7 +21,8 @@ class AskSex extends StatefulWidget {
 
 enum Sex {
   woman('woman'),
-  man('man');
+  man('man'),
+  whatever('whatever');
 
   const Sex(this.value);
   final String value;
@@ -54,8 +55,10 @@ class AskSexState extends State<AskSex>
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: <Widget>[
             Card(
+              margin: EdgeInsets.all(0),
               child: Column(
                 children: [
+                  SizedBox(height: AppConstants.spacingMD),
                   Text(
                     'Quel est votre sexe ?',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -86,8 +89,10 @@ class AskSexState extends State<AskSex>
               ),
             ),
             Card(
+              margin: EdgeInsets.all(0),
               child: Column(
                 children: [
+                  SizedBox(height: AppConstants.spacingMD),
                   Text(
                     'Que recherchez-vous ?',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -104,12 +109,16 @@ class AskSexState extends State<AskSex>
                     child: const Column(
                       children: <Widget>[
                         RadioListTile<Sex>(
-                          title: Text('Femme'),
+                          title: Text('Une femme'),
                           value: Sex.woman,
                         ),
                         RadioListTile<Sex>(
-                          title: Text('Homme'),
+                          title: Text('Un homme'),
                           value: Sex.man,
+                        ),
+                        RadioListTile<Sex>(
+                          title: Text('Pas de préférence'),
+                          value: Sex.whatever,
                         ),
                       ],
                     ),
@@ -132,6 +141,7 @@ class AskSexState extends State<AskSex>
                       ? () {
                           userDoc.set({
                             'sex': _sex!.value,
+                            'lookingForSex': _lookinfForSex!.value,
                           }, SetOptions(merge: true));
                           widget.onNextPressed();
                         }

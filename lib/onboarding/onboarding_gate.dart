@@ -87,7 +87,7 @@ class _OnboardingGateState extends State<OnboardingGate> {
                     alignment: Alignment(0, 0.9),
                     child: SmoothPageIndicator(
                       controller: _pageController,
-                      count: 4, // TODO change
+                      count: 4,
                     ),
                   ),
                 ],
