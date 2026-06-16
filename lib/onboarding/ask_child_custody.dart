@@ -60,7 +60,9 @@ class AskChildCustodyState extends State<AskChildCustody>
                         TextStyle? textStyle,
                       }) {
                         if (isSelected != null && isSelected) {
-                          return Center(child: Text('👶🏼'));
+                          return Center(
+                            child: Text('👶🏼', style: TextStyle(fontSize: 18)),
+                          );
                         } else {
                           return null;
                         }
