@@ -1,3 +1,4 @@
+import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -19,6 +20,8 @@ class AskChildCustody extends StatefulWidget {
 
 class AskChildCustodyState extends State<AskChildCustody>
     with AutomaticKeepAliveClientMixin<AskChildCustody> {
+  List<DateTime> _dates = [];
+
   @override
   bool get wantKeepAlive => true;
 
@@ -38,7 +41,36 @@ class AskChildCustodyState extends State<AskChildCustody>
         padding: const EdgeInsets.symmetric(horizontal: AppConstants.spacingLG),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: <Widget>[Text('Hello World!')],
+          children: <Widget>[
+            Text(
+              'À présent, définissons vos jours de garde et vos jours sans les enfants. 👶🏼',
+            ),
+            Card(
+              margin: EdgeInsets.all(0),
+              child: CalendarDatePicker2(
+                config: CalendarDatePicker2Config(
+                  calendarType: CalendarDatePicker2Type.multi,
+                  dayBuilder:
+                      ({
+                        required DateTime date,
+                        BoxDecoration? decoration,
+                        bool? isDisabled,
+                        bool? isSelected,
+                        bool? isToday,
+                        TextStyle? textStyle,
+                      }) {
+                        if (isSelected != null && isSelected) {
+                          return Center(child: Text('👶🏼'));
+                        } else {
+                          return null;
+                        }
+                      },
+                ),
+                value: _dates,
+                onValueChanged: (dates) => _dates = dates,
+              ),
+            ),
+          ],
         ),
       ),
     );
