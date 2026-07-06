@@ -31,6 +31,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      locale: kReleaseMode ? null : Locale('fr'),
       title: 'Parents in Love app',
       theme: AppTheme.lightTheme, // Light mode theme
       themeMode: ThemeMode.light, // Follows system setting
@@ -41,7 +42,7 @@ class MyApp extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         FirebaseUILocalizations.delegate,
       ],
-      supportedLocales: [Locale('en'), Locale('fr')],
+      supportedLocales: [Locale('en'), Locale('fr'), Locale('es')],
     );
   }
 }
