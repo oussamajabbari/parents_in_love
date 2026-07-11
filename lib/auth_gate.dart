@@ -50,10 +50,10 @@ class AuthGate extends StatelessWidget {
                   : !snapshot.hasData
                   ? Padding(
                       padding: const EdgeInsets.fromLTRB(
-                        AppConstants.spacingLG,
+                        AppConstants.spacingSM,
                         0,
-                        AppConstants.spacingLG,
-                        AppConstants.spacingLG,
+                        AppConstants.spacingSM,
+                        AppConstants.spacingMD,
                       ),
                       child: Material(
                         elevation: 5,

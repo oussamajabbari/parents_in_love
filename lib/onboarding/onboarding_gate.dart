@@ -58,9 +58,9 @@ class _OnboardingGateState extends State<OnboardingGate> {
           if (true) {
             return Padding(
               padding: const EdgeInsets.fromLTRB(
-                AppConstants.spacingMD,
+                AppConstants.spacingSM,
                 0,
-                AppConstants.spacingMD,
+                AppConstants.spacingSM,
                 AppConstants.spacingMD,
               ),
               child: Stack(

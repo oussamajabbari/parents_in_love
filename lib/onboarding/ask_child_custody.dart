@@ -93,10 +93,41 @@ class AskChildCustodyState extends State<AskChildCustody>
                       barrierDismissible: false,
                       builder: (BuildContext context) => AlertDialog(
                         title: Text('Ajouter des jours de garde'),
+                        insetPadding: EdgeInsets.all(10),
                         content: Row(
-                          children: getWeekDaysFirstLetters(
-                            context,
-                          ).map((l) => Text(l)).toList(),
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: getLocalizedWeekDays(context)
+                              .map(
+                                (day) => SizedBox(
+                                  width: 40,
+                                  height: 40,
+                                  child: TextButton(
+                                    style: TextButton.styleFrom(
+                                      shape: CircleBorder(),
+                                      side: BorderSide(),
+                                      fixedSize: Size.fromRadius(10),
+                                      padding: EdgeInsets.all(0),
+                                      backgroundColor:
+                                          addedDate!.weekday == day.index
+                                          ? Theme.of(
+                                              context,
+                                            ).colorScheme.primary
+                                          : null,
+                                      foregroundColor:
+                                          addedDate!.weekday == day.index
+                                          ? Theme.of(
+                                              context,
+                                            ).colorScheme.onPrimary
+                                          : null,
+                                    ),
+                                    onPressed: () => print(
+                                      'yagadaaaa ${addedDate!.weekday} ${day.index}',
+                                    ),
+                                    child: Text(day.firstLetter),
+                                  ),
+                                ),
+                              )
+                              .toList(),
                         ),
                         actions: [
                           TextButton(
@@ -117,23 +148,29 @@ class AskChildCustodyState extends State<AskChildCustody>
                 },
               ),
             ),
-            Text('new dates: $currentDates'),
-            Text('$addedDate'),
-            Text('$removedDate'),
           ],
         ),
       ),
     );
   }
 
-  Iterable<String> getWeekDaysFirstLetters(BuildContext context) {
-    return [0, 1, 2, 3, 4, 5, 6].map(
-      (i) =>
-          DateFormat.EEEE(
-            Localizations.localeOf(context).languageCode,
-          ).dateSymbols.NARROWWEEKDAYS[(i +
-                  MaterialLocalizations.of(context).firstDayOfWeekIndex) %
-              7],
-    );
+  Iterable<({int index, String firstLetter})> getLocalizedWeekDays(
+    BuildContext context,
+  ) {
+    return [0, 1, 2, 3, 4, 5, 6]
+        .map(
+          (i) =>
+              (i + MaterialLocalizations.of(context).firstDayOfWeekIndex) % 7,
+        )
+        .map((i) {
+          return (
+            index: i == 0 ? 7 : i,
+            firstLetter: DateFormat.EEEE(
+              Localizations.localeOf(context).languageCode,
+            ).dateSymbols.NARROWWEEKDAYS[i],
+          );
+        });
   }
 }
+
+//MaterialLocalizations.of(context).firstDayOfWeekIndex
