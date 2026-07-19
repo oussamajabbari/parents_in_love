@@ -55,10 +55,10 @@ class AskSexState extends State<AskSex>
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: <Widget>[
             Card(
-              margin: EdgeInsets.all(0),
+              margin: const EdgeInsets.all(0),
               child: Column(
                 children: [
-                  SizedBox(height: AppConstants.spacingMD),
+                  const SizedBox(height: AppConstants.spacingMD),
                   Text(
                     'Quel est votre sexe ?',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -89,10 +89,10 @@ class AskSexState extends State<AskSex>
               ),
             ),
             Card(
-              margin: EdgeInsets.all(0),
+              margin: const EdgeInsets.all(0),
               child: Column(
                 children: [
-                  SizedBox(height: AppConstants.spacingMD),
+                  const SizedBox(height: AppConstants.spacingMD),
                   Text(
                     'Que recherchez-vous ?',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -133,9 +133,9 @@ class AskSexState extends State<AskSex>
                   onPressed: () {
                     widget.onPreviousPressed();
                   },
-                  child: Text('Précédent'),
+                  child: const Text('Précédent'),
                 ),
-                SizedBox(width: 8),
+                const SizedBox(width: 8),
                 ElevatedButton(
                   onPressed: _sex != null && _lookinfForSex != null
                       ? () {

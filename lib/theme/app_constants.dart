@@ -239,11 +239,11 @@ class AppConstants {
   /// Get responsive padding based on screen width
   static EdgeInsets getResponsivePadding(double screenWidth) {
     if (screenWidth >= breakpointDesktop) {
-      return EdgeInsets.all(spacingXXL);
+      return const EdgeInsets.all(spacingXXL);
     } else if (screenWidth >= breakpointTablet) {
-      return EdgeInsets.all(spacingXL);
+      return const EdgeInsets.all(spacingXL);
     } else {
-      return EdgeInsets.all(spacingMD);
+      return const EdgeInsets.all(spacingMD);
     }
   }
   

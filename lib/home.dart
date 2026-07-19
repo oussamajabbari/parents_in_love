@@ -10,7 +10,7 @@ class Home extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text('Home'),
+        const Text('Home'),
         FutureBuilder(
           future: determinePosition(),
           builder: (BuildContext context, AsyncSnapshot<Position> snapshot) {
@@ -21,15 +21,15 @@ class Home extends StatelessWidget {
               double? altitude = snapshot.data?.longitude;
               return altitude != null
                   ? Text(altitude.toString())
-                  : Text('no altitude');
+                  : const Text('no altitude');
             } else {
-              return Text('loading');
+              return const Text('loading');
             }
           },
         ),
         ElevatedButton(
           onPressed: () => {FirebaseAuth.instance.signOut()},
-          child: Text('Sign Out'),
+          child: const Text('Sign Out'),
         ),
       ],
     );

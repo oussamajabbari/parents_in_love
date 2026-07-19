@@ -28,14 +28,14 @@ class _OnboardingGateState extends State<OnboardingGate> {
 
   void _goToNextPage() {
     _pageController.nextPage(
-      duration: Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 300),
       curve: Curves.ease,
     );
   }
 
   void _goToPrevioustPage() {
     _pageController.previousPage(
-      duration: Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 300),
       curve: Curves.ease,
     );
   }
@@ -50,9 +50,9 @@ class _OnboardingGateState extends State<OnboardingGate> {
       stream: userDoc.snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          return Text('Auth stream error !');
+          return const Text('Auth stream error !');
         } else if (!snapshot.hasData) {
-          return Text('Waiting for user doc');
+          return const Text('Waiting for user doc');
         } else {
           final usersParameters = snapshot.data!.data();
           if (true) {
@@ -89,7 +89,7 @@ class _OnboardingGateState extends State<OnboardingGate> {
                     ],
                   ),
                   Container(
-                    alignment: Alignment(0, 0.9),
+                    alignment: const Alignment(0, 0.9),
                     child: SmoothPageIndicator(
                       controller: _pageController,
                       count: 5,
@@ -99,7 +99,7 @@ class _OnboardingGateState extends State<OnboardingGate> {
               ),
             );
           } else {
-            return Home();
+            return const Home();
           }
         }
       },

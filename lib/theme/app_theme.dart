@@ -149,16 +149,16 @@ class AppTheme {
   /// Light medium contrast color scheme
   static ColorScheme lightMediumContrastScheme() {
     return lightScheme().copyWith(
-      primary: Color(0xFF0052f0),
-      surface: Color(0xFFfaf6f9),
+      primary: const Color(0xFF0052f0),
+      surface: const Color(0xFFfaf6f9),
     );
   }
 
   /// Light high contrast color scheme
   static ColorScheme lightHighContrastScheme() {
     return lightScheme().copyWith(
-      primary: Color(0xFF0043e1),
-      surface: Color(0xFFf5f1f4),
+      primary: const Color(0xFF0043e1),
+      surface: const Color(0xFFf5f1f4),
       outline: const Color(0xff000000),
     );
   }
@@ -166,16 +166,16 @@ class AppTheme {
   /// Dark medium contrast color scheme
   static ColorScheme darkMediumContrastScheme() {
     return darkScheme().copyWith(
-      primary: Color(0xFF0f5cfa),
-      surface: Color(0xFF150e12),
+      primary: const Color(0xFF0f5cfa),
+      surface: const Color(0xFF150e12),
     );
   }
 
   /// Dark high contrast color scheme
   static ColorScheme darkHighContrastScheme() {
     return darkScheme().copyWith(
-      primary: Color(0xFF1e6bff),
-      surface: Color(0xFF1a1317),
+      primary: const Color(0xFF1e6bff),
+      surface: const Color(0xFF1a1317),
       outline: const Color(0xffffffff),
     );
   }
@@ -220,7 +220,7 @@ class AppTheme {
   // ═══════════════════════════════════════════════════════════════════════════════
 
   /// Text theme using AppConstants for consistent font sizes
-  static final TextTheme _textTheme = TextTheme(
+  static final TextTheme _textTheme = const TextTheme(
     displayLarge: TextStyle(
       fontSize: AppConstants.fontSizeDisplayLarge,
       fontWeight: FontWeight.w400,
@@ -328,7 +328,7 @@ class AppTheme {
             return AppConstants.elevationLevel2;
           }),
           padding: WidgetStateProperty.all(
-            EdgeInsets.symmetric(
+            const EdgeInsets.symmetric(
               horizontal: AppConstants.spacingLG,
               vertical: AppConstants.spacingMD,
             ),
@@ -371,7 +371,7 @@ class AppTheme {
       FilledButtonThemeData(
         style: ButtonStyle(
           padding: WidgetStateProperty.all(
-            EdgeInsets.symmetric(
+            const EdgeInsets.symmetric(
               horizontal: AppConstants.spacingLG,
               vertical: AppConstants.spacingMD,
             ),
@@ -410,7 +410,7 @@ class AppTheme {
       TextButtonThemeData(
         style: ButtonStyle(
           padding: WidgetStateProperty.all(
-            EdgeInsets.symmetric(
+            const EdgeInsets.symmetric(
               horizontal: AppConstants.spacingLG,
               vertical: AppConstants.spacingMD,
             ),
@@ -446,7 +446,7 @@ class AppTheme {
       OutlinedButtonThemeData(
         style: ButtonStyle(
           padding: WidgetStateProperty.all(
-            EdgeInsets.symmetric(
+            const EdgeInsets.symmetric(
               horizontal: AppConstants.spacingLG,
               vertical: AppConstants.spacingMD,
             ),
@@ -510,7 +510,7 @@ class AppTheme {
   /// Input decoration theme
   static final InputDecorationTheme _inputDecorationTheme =
       InputDecorationTheme(
-        contentPadding: EdgeInsets.symmetric(
+        contentPadding: const EdgeInsets.symmetric(
           horizontal: AppConstants.spacingMD,
           vertical: AppConstants.spacingMD,
         ),
@@ -529,7 +529,7 @@ class AppTheme {
       );
 
   /// App bar theme for light mode
-  static final AppBarTheme _lightAppBarTheme = AppBarTheme(
+  static final AppBarTheme _lightAppBarTheme = const AppBarTheme(
     elevation: AppConstants.elevationLevel1,
     centerTitle: false,
     titleSpacing: AppConstants.spacingMD,
@@ -537,7 +537,7 @@ class AppTheme {
   );
 
   /// App bar theme for dark mode
-  static final AppBarTheme _darkAppBarTheme = AppBarTheme(
+  static final AppBarTheme _darkAppBarTheme = const AppBarTheme(
     elevation: AppConstants.elevationLevel1,
     centerTitle: false,
     titleSpacing: AppConstants.spacingMD,
@@ -547,7 +547,7 @@ class AppTheme {
   /// Card theme
   static final CardThemeData _cardTheme = CardThemeData(
     elevation: AppConstants.elevationLevel1,
-    margin: EdgeInsets.all(AppConstants.spacingSM),
+    margin: const EdgeInsets.all(AppConstants.spacingSM),
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(AppConstants.radiusLG),
     ),
@@ -555,7 +555,7 @@ class AppTheme {
 
   /// Chip theme
   static final ChipThemeData _chipTheme = ChipThemeData(
-    padding: EdgeInsets.symmetric(
+    padding: const EdgeInsets.symmetric(
       horizontal: AppConstants.spacingMD,
       vertical: AppConstants.spacingSM,
     ),
@@ -566,20 +566,20 @@ class AppTheme {
 
   /// Progress indicator theme
   static final ProgressIndicatorThemeData _progressIndicatorTheme =
-      ProgressIndicatorThemeData();
+      const ProgressIndicatorThemeData();
 
   /// Divider theme
-  static final DividerThemeData _dividerTheme = DividerThemeData(
+  static final DividerThemeData _dividerTheme = const DividerThemeData(
     thickness: AppConstants.borderWidthThin,
     space: AppConstants.spacingMD,
   );
 
   /// Bottom navigation bar theme
   static final BottomNavigationBarThemeData _bottomNavigationBarTheme =
-      BottomNavigationBarThemeData(type: BottomNavigationBarType.fixed);
+      const BottomNavigationBarThemeData(type: BottomNavigationBarType.fixed);
 
   /// Tab bar theme
-  static final TabBarThemeData _tabBarTheme = TabBarThemeData(
+  static final TabBarThemeData _tabBarTheme = const TabBarThemeData(
     labelPadding: EdgeInsets.symmetric(
       horizontal: AppConstants.spacingMD,
       vertical: AppConstants.spacingSM,
@@ -611,10 +611,10 @@ class AppTheme {
   );
 
   /// Radio theme
-  static final RadioThemeData _radioTheme = RadioThemeData();
+  static final RadioThemeData _radioTheme = const RadioThemeData();
 
   /// Slider theme
-  static final SliderThemeData _sliderTheme = SliderThemeData();
+  static final SliderThemeData _sliderTheme = const SliderThemeData();
 }
 
 /// Custom theme colors extension for additional brand colors

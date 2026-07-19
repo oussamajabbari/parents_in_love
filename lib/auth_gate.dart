@@ -46,7 +46,7 @@ class AuthGate extends StatelessWidget {
                 ),
               ),
               snapshot.hasError
-                  ? Text('Failed to get login status !')
+                  ? const Text('Failed to get login status !')
                   : !snapshot.hasData
                   ? Padding(
                       padding: const EdgeInsets.fromLTRB(
@@ -70,7 +70,7 @@ class AuthGate extends StatelessWidget {
                         ),
                       ),
                     )
-                  : OnboardingGate(),
+                  : const OnboardingGate(),
             ],
           ),
         );

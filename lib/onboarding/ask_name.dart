@@ -86,9 +86,9 @@ class AskNameState extends State<AskName>
                       FocusManager.instance.primaryFocus?.unfocus();
                       widget.onPreviousPressed();
                     },
-                    child: Text('Précédent'),
+                    child: const Text('Précédent'),
                   ),
-                  SizedBox(width: 8),
+                  const SizedBox(width: 8),
                   ElevatedButton(
                     onPressed: enableNextButton
                         ? () {

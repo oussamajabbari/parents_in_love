@@ -53,10 +53,10 @@ class AskBirthState extends State<AskBirth>
               ),
             ),
             Card(
-              margin: EdgeInsets.all(0),
+              margin: const EdgeInsets.all(0),
               child: CalendarDatePicker(
                 initialDate: DateTime.now(),
-                firstDate: DateTime.now().subtract(Duration(days: 130 * 365)),
+                firstDate: DateTime.now().subtract(const Duration(days: 130 * 365)),
                 lastDate: DateTime.now(),
                 onDateChanged: (date) => {
                   setState(() {
@@ -73,7 +73,7 @@ class AskBirthState extends State<AskBirth>
                   )
                 : Container(),
             selectedDate != null && !isAdult()
-                ? Text(
+                ? const Text(
                     'Age minimum 18 ans',
                     style: TextStyle(color: Colors.red),
                   )
@@ -85,9 +85,9 @@ class AskBirthState extends State<AskBirth>
                   onPressed: () {
                     widget.onPreviousPressed();
                   },
-                  child: Text('Précédent'),
+                  child: const Text('Précédent'),
                 ),
-                SizedBox(width: 8),
+                const SizedBox(width: 8),
                 ElevatedButton(
                   onPressed: selectedDate != null && isAdult()
                       ? () {
@@ -101,7 +101,7 @@ class AskBirthState extends State<AskBirth>
                 ),
               ],
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
           ],
         ),
       ),
@@ -114,7 +114,7 @@ class AskBirthState extends State<AskBirth>
     } else {
       return selectedDate != null &&
           selectedDate!.isBefore(
-            DateTime.now().subtract(Duration(days: 18 * 365)),
+            DateTime.now().subtract(const Duration(days: 18 * 365)),
           );
     }
   }

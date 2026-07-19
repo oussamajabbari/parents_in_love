@@ -21,7 +21,7 @@ Future<void> main() async {
     await FirebaseAuth.instance.useAuthEmulator(devMachineIP, 9099);
     FirebaseFirestore.instance.useFirestoreEmulator(devMachineIP, 8080);
   }
-  runApp(ProviderScope(child: const MyApp()));
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -31,18 +31,18 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      locale: kReleaseMode ? null : Locale('fr'),
+      locale: kReleaseMode ? null : const Locale('fr'),
       title: 'Parents in Love app',
       theme: AppTheme.lightTheme, // Light mode theme
       themeMode: ThemeMode.light, // Follows system setting
-      home: AuthGate(),
+      home: const AuthGate(),
       localizationsDelegates: [
         GlobalMaterialLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         FirebaseUILocalizations.delegate,
       ],
-      supportedLocales: [Locale('en'), Locale('fr'), Locale('es')],
+      supportedLocales: [const Locale('en'), const Locale('fr'), const Locale('es')],
     );
   }
 }

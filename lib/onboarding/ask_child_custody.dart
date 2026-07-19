@@ -2,6 +2,7 @@ import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:parents_in_love/theme/app_constants.dart';
 
@@ -18,6 +19,10 @@ class AskChildCustody extends StatefulWidget {
   @override
   AskChildCustodyState createState() => AskChildCustodyState();
 }
+
+enum OnlyOnceOrRepeat { onlyOnce, repeat }
+
+enum ReccurenceUnity { day, week }
 
 class AskChildCustodyState extends State<AskChildCustody>
     with AutomaticKeepAliveClientMixin<AskChildCustody> {
@@ -45,11 +50,11 @@ class AskChildCustodyState extends State<AskChildCustody>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: <Widget>[
-            Text(
+            const Text(
               'À présent, définissons vos jours de garde et vos jours sans les enfants. 👶🏼',
             ),
             Card(
-              margin: EdgeInsets.all(0),
+              margin: const EdgeInsets.all(0), 
               child: CalendarDatePicker2(
                 config: CalendarDatePicker2Config(
                   firstDayOfWeek: MaterialLocalizations.of(
@@ -66,7 +71,7 @@ class AskChildCustodyState extends State<AskChildCustody>
                         TextStyle? textStyle,
                       }) {
                         if (isSelected != null && isSelected) {
-                          return Center(
+                          return const Center(
                             child: Text('👶🏼', style: TextStyle(fontSize: 18)),
                           );
                         } else {
@@ -91,55 +96,8 @@ class AskChildCustodyState extends State<AskChildCustody>
                     final result = await showDialog(
                       context: context,
                       barrierDismissible: false,
-                      builder: (BuildContext context) => AlertDialog(
-                        title: Text('Ajouter des jours de garde'),
-                        insetPadding: EdgeInsets.all(10),
-                        content: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: getLocalizedWeekDays(context)
-                              .map(
-                                (day) => SizedBox(
-                                  width: 40,
-                                  height: 40,
-                                  child: TextButton(
-                                    style: TextButton.styleFrom(
-                                      shape: CircleBorder(),
-                                      side: BorderSide(),
-                                      fixedSize: Size.fromRadius(10),
-                                      padding: EdgeInsets.all(0),
-                                      backgroundColor:
-                                          addedDate!.weekday == day.index
-                                          ? Theme.of(
-                                              context,
-                                            ).colorScheme.primary
-                                          : null,
-                                      foregroundColor:
-                                          addedDate!.weekday == day.index
-                                          ? Theme.of(
-                                              context,
-                                            ).colorScheme.onPrimary
-                                          : null,
-                                    ),
-                                    onPressed: () => print(
-                                      'yagadaaaa ${addedDate!.weekday} ${day.index}',
-                                    ),
-                                    child: Text(day.firstLetter),
-                                  ),
-                                ),
-                              )
-                              .toList(),
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, 'cancel'),
-                            child: Text('Annuler'),
-                          ),
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, addedDate),
-                            child: Text('Valider'),
-                          ),
-                        ],
-                      ),
+                      builder: (BuildContext context) =>
+                          AddCustodyDaysDialog(addedDate: addedDate!),
                     );
                     setState(() {
                       currentDates = newDates;
@@ -154,23 +112,168 @@ class AskChildCustodyState extends State<AskChildCustody>
     );
   }
 
-  Iterable<({int index, String firstLetter})> getLocalizedWeekDays(
-    BuildContext context,
-  ) {
-    return [0, 1, 2, 3, 4, 5, 6]
-        .map(
-          (i) =>
-              (i + MaterialLocalizations.of(context).firstDayOfWeekIndex) % 7,
-        )
-        .map((i) {
-          return (
-            index: i == 0 ? 7 : i,
-            firstLetter: DateFormat.EEEE(
+  // String getWeekDayFirstLetter(DateTime day) {
+  //   return DateFormat.EEEE(
+  //     Localizations.localeOf(context).languageCode,
+  //   ).dateSymbols.NARROWWEEKDAYS[day.weekday % 7];
+  // }
+
+  // Iterable<DateTime> getLocalWeekDaysFromDateTime(
+  //   BuildContext context,
+  //   DateTime date,
+  // ) {
+  //   return [0, 1, 2, 3, 4, 5, 6].map((i) {
+  //     var deltaToDate =
+  //         -date.weekday +
+  //         MaterialLocalizations.of(context).firstDayOfWeekIndex +
+  //         i;
+
+  //     if (deltaToDate < 0) {
+  //       return date.subtract(Duration(days: deltaToDate.abs()));
+  //     } else {
+  //       return date.add(Duration(days: deltaToDate));
+  //     }
+  //   });
+  // }
+}
+
+class AddCustodyDaysDialog extends StatefulWidget {
+  const AddCustodyDaysDialog({super.key, required this.addedDate});
+
+  final DateTime addedDate;
+
+  @override
+  State<AddCustodyDaysDialog> createState() => _AddCustodyDaysDialogState();
+}
+
+class _AddCustodyDaysDialogState extends State<AddCustodyDaysDialog> {
+  OnlyOnceOrRepeat? onlyOnceOrRepeat = .onlyOnce;
+  int repeatEvery = 2;
+  ReccurenceUnity _reccurenceUnity = .week;
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Ajoût de jours de garde'),
+      content: Column(
+        children: [
+          Text(
+            DateFormat.yMMMMEEEEd(
               Localizations.localeOf(context).languageCode,
-            ).dateSymbols.NARROWWEEKDAYS[i],
-          );
-        });
+            ).format(widget.addedDate),
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          RadioGroup<OnlyOnceOrRepeat>(
+            groupValue: onlyOnceOrRepeat,
+            onChanged: (OnlyOnceOrRepeat? value) {
+              setState(() {
+                onlyOnceOrRepeat = value;
+              });
+            },
+            child: const Column(
+              children: <Widget>[
+                RadioListTile(
+                  title: Text('Uniquement ce jour'),
+                  value: OnlyOnceOrRepeat.onlyOnce,
+                ),
+                RadioListTile(
+                  title: Text('Répêter tous les:'),
+                  value: OnlyOnceOrRepeat.repeat,
+                ),
+                Text('miaou'),
+              ],
+            ),
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  decoration: const InputDecoration(labelText: "Enter your number"),
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                  ], // Only numbers can be entered
+                ),
+              ),
+              DropdownButton<ReccurenceUnity>(
+                value: _reccurenceUnity,
+                items: [
+                  const DropdownMenuItem(value: .day, child: Text('jours(s)')),
+                  const DropdownMenuItem(value: .week, child: Text('semaine(s)')),
+                ],
+                onChanged: (ReccurenceUnity? value) {
+                  setState(() {
+                    print('############################### $value');
+                    _reccurenceUnity = value!;
+                  });
+                },
+              ),
+            ],
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, 'cancel'),
+          child: const Text('Annuler'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(context, widget.addedDate),
+          child: const Text('Valider'),
+        ),
+      ],
+    );
   }
 }
 
-//MaterialLocalizations.of(context).firstDayOfWeekIndex
+// AlertDialog(
+//                         title: Text('Ajouter des jours de garde'),
+//                         insetPadding: EdgeInsets.all(10),
+//                         content: Column(
+//                           children: [
+//                             Row(
+//                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                               children: weekDates
+//                                   .map(
+//                                     (day) => SizedBox(
+//                                       width: 40,
+//                                       height: 40,
+//                                       child: TextButton(
+//                                         style: TextButton.styleFrom(
+//                                           shape: CircleBorder(),
+//                                           side: BorderSide(),
+//                                           fixedSize: Size.fromRadius(10),
+//                                           padding: EdgeInsets.all(0),
+//                                           backgroundColor:
+//                                               addedDate!.weekday == day.weekday
+//                                               ? Theme.of(
+//                                                   context,
+//                                                 ).colorScheme.primary
+//                                               : null,
+//                                           foregroundColor:
+//                                               addedDate!.weekday == day.weekday
+//                                               ? Theme.of(
+//                                                   context,
+//                                                 ).colorScheme.onPrimary
+//                                               : null,
+//                                         ),
+//                                         onPressed: () => print('yagadaaaa'),
+//                                         child: Text(getWeekDayFirstLetter(day)),
+//                                       ),
+//                                     ),
+//                                   )
+//                                   .toList(),
+//                             ),
+//                           ],
+//                         ),
+//                         actions: [
+//                           TextButton(
+//                             onPressed: () => Navigator.pop(context, 'cancel'),
+//                             child: Text('Annuler'),
+//                           ),
+//                           TextButton(
+//                             onPressed: () => Navigator.pop(context, addedDate),
+//                             child: Text('Valider'),
+//                           ),
+//                         ],
+//                       )
