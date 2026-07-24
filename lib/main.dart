@@ -15,8 +15,9 @@ Future<void> main() async {
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   if (!kReleaseMode) {
-    const String devMachineIP = '192.168.1.97';
+    //const String devMachineIP = '192.168.1.97';
     //const String devMachineIP = 'localhost';
+    const String devMachineIP = '10.92.10.211';
 
     await FirebaseAuth.instance.useAuthEmulator(devMachineIP, 9099);
     FirebaseFirestore.instance.useFirestoreEmulator(devMachineIP, 8080);
@@ -42,7 +43,11 @@ class MyApp extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         FirebaseUILocalizations.delegate,
       ],
-      supportedLocales: [const Locale('en'), const Locale('fr'), const Locale('es')],
+      supportedLocales: [
+        const Locale('en'),
+        const Locale('fr'),
+        const Locale('es'),
+      ],
     );
   }
 }

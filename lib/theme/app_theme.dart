@@ -220,7 +220,7 @@ class AppTheme {
   // ═══════════════════════════════════════════════════════════════════════════════
 
   /// Text theme using AppConstants for consistent font sizes
-  static final TextTheme _textTheme = const TextTheme(
+  static const TextTheme _textTheme = TextTheme(
     displayLarge: TextStyle(
       fontSize: AppConstants.fontSizeDisplayLarge,
       fontWeight: FontWeight.w400,
@@ -529,7 +529,7 @@ class AppTheme {
       );
 
   /// App bar theme for light mode
-  static final AppBarTheme _lightAppBarTheme = const AppBarTheme(
+  static const AppBarTheme _lightAppBarTheme = AppBarTheme(
     elevation: AppConstants.elevationLevel1,
     centerTitle: false,
     titleSpacing: AppConstants.spacingMD,
@@ -537,7 +537,7 @@ class AppTheme {
   );
 
   /// App bar theme for dark mode
-  static final AppBarTheme _darkAppBarTheme = const AppBarTheme(
+  static const AppBarTheme _darkAppBarTheme = AppBarTheme(
     elevation: AppConstants.elevationLevel1,
     centerTitle: false,
     titleSpacing: AppConstants.spacingMD,
@@ -565,21 +565,21 @@ class AppTheme {
   );
 
   /// Progress indicator theme
-  static final ProgressIndicatorThemeData _progressIndicatorTheme =
-      const ProgressIndicatorThemeData();
+  static const ProgressIndicatorThemeData _progressIndicatorTheme =
+      ProgressIndicatorThemeData();
 
   /// Divider theme
-  static final DividerThemeData _dividerTheme = const DividerThemeData(
+  static const DividerThemeData _dividerTheme = DividerThemeData(
     thickness: AppConstants.borderWidthThin,
     space: AppConstants.spacingMD,
   );
 
   /// Bottom navigation bar theme
-  static final BottomNavigationBarThemeData _bottomNavigationBarTheme =
-      const BottomNavigationBarThemeData(type: BottomNavigationBarType.fixed);
+  static const BottomNavigationBarThemeData _bottomNavigationBarTheme =
+      BottomNavigationBarThemeData(type: BottomNavigationBarType.fixed);
 
   /// Tab bar theme
-  static final TabBarThemeData _tabBarTheme = const TabBarThemeData(
+  static const TabBarThemeData _tabBarTheme = TabBarThemeData(
     labelPadding: EdgeInsets.symmetric(
       horizontal: AppConstants.spacingMD,
       vertical: AppConstants.spacingSM,
@@ -611,10 +611,10 @@ class AppTheme {
   );
 
   /// Radio theme
-  static final RadioThemeData _radioTheme = const RadioThemeData();
+  static const RadioThemeData _radioTheme = RadioThemeData();
 
   /// Slider theme
-  static final SliderThemeData _sliderTheme = const SliderThemeData();
+  static const SliderThemeData _sliderTheme = SliderThemeData();
 }
 
 /// Custom theme colors extension for additional brand colors

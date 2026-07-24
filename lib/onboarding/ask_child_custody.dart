@@ -6,6 +6,22 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:parents_in_love/theme/app_constants.dart';
 
+enum RepeatBase { day, week }
+
+class CustodyDayDefinition {
+  final DateTime startDate;
+  bool isRepeated;
+  int repeatEvery;
+  RepeatBase repeatBase;
+
+  CustodyDayDefinition({
+    required this.startDate,
+    required this.isRepeated,
+    required this.repeatEvery,
+    required this.repeatBase,
+  });
+}
+
 class AskChildCustody extends StatefulWidget {
   final VoidCallback onPreviousPressed;
   final VoidCallback onNextPressed;
@@ -20,18 +36,53 @@ class AskChildCustody extends StatefulWidget {
   AskChildCustodyState createState() => AskChildCustodyState();
 }
 
-enum OnlyOnceOrRepeat { onlyOnce, repeat }
-
-enum ReccurenceUnity { day, week }
+enum CustodyDayStatus {
+  noCustody,
+  recurrentCustody,
+  exceptionalCustody,
+  exceptionalNoCustody,
+}
 
 class AskChildCustodyState extends State<AskChildCustody>
     with AutomaticKeepAliveClientMixin<AskChildCustody> {
   List<DateTime> currentDates = [];
   DateTime? addedDate;
   DateTime? removedDate;
+  List<CustodyDayDefinition> custodies = [];
 
   @override
   bool get wantKeepAlive => true;
+
+  CustodyDayStatus isCustodyDay(DateTime date) {
+    // First look for exceptional custodies
+    for (var custody in custodies) {
+      if (!custody.isRepeated) {
+        if (date == custody.startDate) {
+          return CustodyDayStatus.exceptionalCustody;
+        }
+      }
+    }
+
+    for (var custody in custodies) {
+      var delta = date.difference(custody.startDate);
+      if (delta.inDays < 0) {
+        return CustodyDayStatus.noCustody;
+      }
+      if (custody.repeatBase == RepeatBase.day) {
+        if (delta.inDays % custody.repeatEvery == 0) {
+          return CustodyDayStatus.recurrentCustody;
+        }
+      } else {
+        final deltaWeeks = delta.inDays / 7;
+        final deltaWeeksRemainder = delta.inDays % 7;
+        if (deltaWeeksRemainder == 0 && deltaWeeks % custody.repeatEvery == 0) {
+          return CustodyDayStatus.recurrentCustody;
+        }
+      }
+    }
+
+    return CustodyDayStatus.noCustody;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +105,7 @@ class AskChildCustodyState extends State<AskChildCustody>
               'À présent, définissons vos jours de garde et vos jours sans les enfants. 👶🏼',
             ),
             Card(
-              margin: const EdgeInsets.all(0), 
+              margin: const EdgeInsets.all(0),
               child: CalendarDatePicker2(
                 config: CalendarDatePicker2Config(
                   firstDayOfWeek: MaterialLocalizations.of(
@@ -70,7 +121,8 @@ class AskChildCustodyState extends State<AskChildCustody>
                         bool? isToday,
                         TextStyle? textStyle,
                       }) {
-                        if (isSelected != null && isSelected) {
+                        if (isCustodyDay(date) ==
+                            CustodyDayStatus.recurrentCustody) {
                           return const Center(
                             child: Text('👶🏼', style: TextStyle(fontSize: 18)),
                           );
@@ -99,6 +151,9 @@ class AskChildCustodyState extends State<AskChildCustody>
                       builder: (BuildContext context) =>
                           AddCustodyDaysDialog(addedDate: addedDate!),
                     );
+                    if (result is CustodyDayDefinition) {
+                      custodies.add(result);
+                    }
                     setState(() {
                       currentDates = newDates;
                     });
@@ -106,35 +161,17 @@ class AskChildCustodyState extends State<AskChildCustody>
                 },
               ),
             ),
+            ElevatedButton(
+              onPressed: () => setState(() {
+                custodies = [];
+              }),
+              child: const Text('Clear'),
+            ),
           ],
         ),
       ),
     );
   }
-
-  // String getWeekDayFirstLetter(DateTime day) {
-  //   return DateFormat.EEEE(
-  //     Localizations.localeOf(context).languageCode,
-  //   ).dateSymbols.NARROWWEEKDAYS[day.weekday % 7];
-  // }
-
-  // Iterable<DateTime> getLocalWeekDaysFromDateTime(
-  //   BuildContext context,
-  //   DateTime date,
-  // ) {
-  //   return [0, 1, 2, 3, 4, 5, 6].map((i) {
-  //     var deltaToDate =
-  //         -date.weekday +
-  //         MaterialLocalizations.of(context).firstDayOfWeekIndex +
-  //         i;
-
-  //     if (deltaToDate < 0) {
-  //       return date.subtract(Duration(days: deltaToDate.abs()));
-  //     } else {
-  //       return date.add(Duration(days: deltaToDate));
-  //     }
-  //   });
-  // }
 }
 
 class AddCustodyDaysDialog extends StatefulWidget {
@@ -147,66 +184,87 @@ class AddCustodyDaysDialog extends StatefulWidget {
 }
 
 class _AddCustodyDaysDialogState extends State<AddCustodyDaysDialog> {
-  OnlyOnceOrRepeat? onlyOnceOrRepeat = .onlyOnce;
-  int repeatEvery = 2;
-  ReccurenceUnity _reccurenceUnity = .week;
+  late final CustodyDayDefinition custodyDayDefinition;
+
+  @override
+  void initState() {
+    super.initState();
+
+    custodyDayDefinition = .new(
+      startDate: widget.addedDate,
+      isRepeated: true,
+      repeatEvery: 2,
+      repeatBase: .week,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
+      insetPadding: const EdgeInsets.all(0),
       title: const Text('Ajoût de jours de garde'),
       content: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             DateFormat.yMMMMEEEEd(
               Localizations.localeOf(context).languageCode,
             ).format(widget.addedDate),
-            style: Theme.of(context).textTheme.titleLarge,
+            style: Theme.of(context).textTheme.headlineMedium,
           ),
-          RadioGroup<OnlyOnceOrRepeat>(
-            groupValue: onlyOnceOrRepeat,
-            onChanged: (OnlyOnceOrRepeat? value) {
+          const SizedBox(height: 20),
+          RadioGroup<bool>(
+            groupValue: custodyDayDefinition.isRepeated,
+            onChanged: (bool? value) {
               setState(() {
-                onlyOnceOrRepeat = value;
+                custodyDayDefinition.isRepeated = value!;
               });
             },
             child: const Column(
               children: <Widget>[
+                RadioListTile(title: Text('Uniquement ce jour'), value: false),
                 RadioListTile(
-                  title: Text('Uniquement ce jour'),
-                  value: OnlyOnceOrRepeat.onlyOnce,
+                  title: Text('Répêter tou(te)s les:'),
+                  value: true,
                 ),
-                RadioListTile(
-                  title: Text('Répêter tous les:'),
-                  value: OnlyOnceOrRepeat.repeat,
-                ),
-                Text('miaou'),
               ],
             ),
           ),
+          const SizedBox(height: 20),
           Row(
             children: [
-              Expanded(
-                child: TextField(
-                  decoration: const InputDecoration(labelText: "Enter your number"),
+              SizedBox(
+                width: 110,
+                child: TextFormField(
+                  enabled: custodyDayDefinition.isRepeated,
+                  initialValue: custodyDayDefinition.repeatEvery.toString(),
+                  decoration: const InputDecoration(labelText: "nombre"),
                   keyboardType: TextInputType.number,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                  ], // Only numbers can be entered
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  onChanged: (value) => setState(() {
+                    if (value != '') {
+                      custodyDayDefinition.repeatEvery = int.parse(value);
+                    }
+                  }), // Only numbers can be entered
                 ),
               ),
-              DropdownButton<ReccurenceUnity>(
-                value: _reccurenceUnity,
+              const SizedBox(width: 20),
+              DropdownButton<RepeatBase>(
+                value: custodyDayDefinition.repeatBase,
                 items: [
                   const DropdownMenuItem(value: .day, child: Text('jours(s)')),
-                  const DropdownMenuItem(value: .week, child: Text('semaine(s)')),
+                  const DropdownMenuItem(
+                    value: .week,
+                    child: Text('semaine(s)'),
+                  ),
                 ],
-                onChanged: (ReccurenceUnity? value) {
-                  setState(() {
-                    print('############################### $value');
-                    _reccurenceUnity = value!;
-                  });
-                },
+                onChanged: custodyDayDefinition.isRepeated
+                    ? (RepeatBase? value) {
+                        setState(() {
+                          custodyDayDefinition.repeatBase = value!;
+                        });
+                      }
+                    : null,
               ),
             ],
           ),
@@ -218,62 +276,10 @@ class _AddCustodyDaysDialogState extends State<AddCustodyDaysDialog> {
           child: const Text('Annuler'),
         ),
         TextButton(
-          onPressed: () => Navigator.pop(context, widget.addedDate),
+          onPressed: () => Navigator.pop(context, custodyDayDefinition),
           child: const Text('Valider'),
         ),
       ],
     );
   }
 }
-
-// AlertDialog(
-//                         title: Text('Ajouter des jours de garde'),
-//                         insetPadding: EdgeInsets.all(10),
-//                         content: Column(
-//                           children: [
-//                             Row(
-//                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                               children: weekDates
-//                                   .map(
-//                                     (day) => SizedBox(
-//                                       width: 40,
-//                                       height: 40,
-//                                       child: TextButton(
-//                                         style: TextButton.styleFrom(
-//                                           shape: CircleBorder(),
-//                                           side: BorderSide(),
-//                                           fixedSize: Size.fromRadius(10),
-//                                           padding: EdgeInsets.all(0),
-//                                           backgroundColor:
-//                                               addedDate!.weekday == day.weekday
-//                                               ? Theme.of(
-//                                                   context,
-//                                                 ).colorScheme.primary
-//                                               : null,
-//                                           foregroundColor:
-//                                               addedDate!.weekday == day.weekday
-//                                               ? Theme.of(
-//                                                   context,
-//                                                 ).colorScheme.onPrimary
-//                                               : null,
-//                                         ),
-//                                         onPressed: () => print('yagadaaaa'),
-//                                         child: Text(getWeekDayFirstLetter(day)),
-//                                       ),
-//                                     ),
-//                                   )
-//                                   .toList(),
-//                             ),
-//                           ],
-//                         ),
-//                         actions: [
-//                           TextButton(
-//                             onPressed: () => Navigator.pop(context, 'cancel'),
-//                             child: Text('Annuler'),
-//                           ),
-//                           TextButton(
-//                             onPressed: () => Navigator.pop(context, addedDate),
-//                             child: Text('Valider'),
-//                           ),
-//                         ],
-//                       )
