@@ -20,6 +20,11 @@ class CustodyDayDefinition {
     required this.repeatEvery,
     required this.repeatBase,
   });
+
+  @override
+  String toString() {
+    return '$startDate, isRepeated: $isRepeated, repeatEvery: $repeatEvery, repeatBase: $repeatBase';
+  }
 }
 
 class AskChildCustody extends StatefulWidget {
@@ -66,7 +71,7 @@ class AskChildCustodyState extends State<AskChildCustody>
     for (var custody in custodies) {
       var delta = date.difference(custody.startDate);
       if (delta.inDays < 0) {
-        return CustodyDayStatus.noCustody;
+        continue;
       }
       if (custody.repeatBase == RepeatBase.day) {
         if (delta.inDays % custody.repeatEvery == 0) {
@@ -111,7 +116,6 @@ class AskChildCustodyState extends State<AskChildCustody>
                   firstDayOfWeek: MaterialLocalizations.of(
                     context,
                   ).firstDayOfWeekIndex,
-                  calendarType: CalendarDatePicker2Type.multi,
                   dayBuilder:
                       ({
                         required DateTime date,
@@ -131,7 +135,7 @@ class AskChildCustodyState extends State<AskChildCustody>
                         }
                       },
                 ),
-                value: currentDates,
+                value: [],
                 onValueChanged: (newDates) async {
                   final currentDatesSet = {...currentDates};
                   final newDatesSet = {...newDates};
@@ -154,9 +158,8 @@ class AskChildCustodyState extends State<AskChildCustody>
                     if (result is CustodyDayDefinition) {
                       custodies.add(result);
                     }
-                    setState(() {
-                      currentDates = newDates;
-                    });
+                    // Re-trigger the drawing
+                    setState(() {});
                   }
                 },
               ),
