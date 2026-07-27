@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:parents_in_love/home.dart';
+import 'package:parents_in_love/onboarding/accept_cookies.dart';
 import 'package:parents_in_love/onboarding/ask_birth.dart';
 import 'package:parents_in_love/onboarding/ask_child_custody.dart';
 import 'package:parents_in_love/onboarding/ask_name.dart';
@@ -86,13 +87,14 @@ class _OnboardingGateState extends State<OnboardingGate> {
                         onPreviousPressed: _goToPrevioustPage,
                         onNextPressed: _goToNextPage,
                       ),
+                      const AcceptCookies(),
                     ],
                   ),
                   Container(
                     alignment: const Alignment(0, 0.9),
                     child: SmoothPageIndicator(
                       controller: _pageController,
-                      count: 5,
+                      count: 6,
                     ),
                   ),
                 ],

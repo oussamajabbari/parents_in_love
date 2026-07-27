@@ -11,8 +11,8 @@ enum RepeatBase { day, week }
 class CustodyDayDefinition {
   final DateTime startDate;
   bool isRepeated;
-  int repeatEvery;
-  RepeatBase repeatBase;
+  int? repeatEvery;
+  RepeatBase? repeatBase;
 
   CustodyDayDefinition({
     required this.startDate,
@@ -58,7 +58,7 @@ class AskChildCustodyState extends State<AskChildCustody>
   @override
   bool get wantKeepAlive => true;
 
-  CustodyDayStatus isCustodyDay(DateTime date) {
+  CustodyDayStatus getCustodyDayStatus(DateTime date) {
     // First look for exceptional custodies
     for (var custody in custodies) {
       if (!custody.isRepeated) {
@@ -69,18 +69,23 @@ class AskChildCustodyState extends State<AskChildCustody>
     }
 
     for (var custody in custodies) {
+      if (!custody.isRepeated) {
+        continue;
+      }
+
       var delta = date.difference(custody.startDate);
       if (delta.inDays < 0) {
         continue;
       }
       if (custody.repeatBase == RepeatBase.day) {
-        if (delta.inDays % custody.repeatEvery == 0) {
+        if (delta.inDays % custody.repeatEvery! == 0) {
           return CustodyDayStatus.recurrentCustody;
         }
       } else {
         final deltaWeeks = delta.inDays / 7;
         final deltaWeeksRemainder = delta.inDays % 7;
-        if (deltaWeeksRemainder == 0 && deltaWeeks % custody.repeatEvery == 0) {
+        if (deltaWeeksRemainder == 0 &&
+            deltaWeeks % custody.repeatEvery! == 0) {
           return CustodyDayStatus.recurrentCustody;
         }
       }
@@ -125,13 +130,20 @@ class AskChildCustodyState extends State<AskChildCustody>
                         bool? isToday,
                         TextStyle? textStyle,
                       }) {
-                        if (isCustodyDay(date) ==
-                            CustodyDayStatus.recurrentCustody) {
-                          return const Center(
-                            child: Text('👶🏼', style: TextStyle(fontSize: 18)),
-                          );
-                        } else {
-                          return null;
+                        switch (getCustodyDayStatus(date)) {
+                          case CustodyDayStatus.exceptionalCustody:
+                            return const Center(
+                              child: Text('<3', style: TextStyle(fontSize: 18)),
+                            );
+                          case CustodyDayStatus.recurrentCustody:
+                            return const Center(
+                              child: Text(
+                                '👶🏼',
+                                style: TextStyle(fontSize: 18),
+                              ),
+                            );
+                          default:
+                            return null;
                         }
                       },
                 ),
@@ -152,8 +164,14 @@ class AskChildCustodyState extends State<AskChildCustody>
                     final result = await showDialog(
                       context: context,
                       barrierDismissible: false,
-                      builder: (BuildContext context) =>
-                          AddCustodyDaysDialog(addedDate: addedDate!),
+                      builder: (BuildContext context) => custodies.isEmpty
+                          ? AddCustodyDaysDialog(addedDate: addedDate!)
+                          : AddCustodyDaysDialog(
+                              addedDate: addedDate!,
+                              previousIsRepeated: custodies.last.isRepeated,
+                              previousRepeatEvery: custodies.last.repeatEvery,
+                              previsouRepeatBase: custodies.last.repeatBase,
+                            ),
                     );
                     if (result is CustodyDayDefinition) {
                       custodies.add(result);
@@ -164,6 +182,9 @@ class AskChildCustodyState extends State<AskChildCustody>
                 },
               ),
             ),
+            custodies.isNotEmpty
+                ? Text(custodies.last.toString())
+                : Container(),
             ElevatedButton(
               onPressed: () => setState(() {
                 custodies = [];
@@ -178,9 +199,18 @@ class AskChildCustodyState extends State<AskChildCustody>
 }
 
 class AddCustodyDaysDialog extends StatefulWidget {
-  const AddCustodyDaysDialog({super.key, required this.addedDate});
+  const AddCustodyDaysDialog({
+    super.key,
+    required this.addedDate,
+    this.previousIsRepeated,
+    this.previousRepeatEvery,
+    this.previsouRepeatBase,
+  });
 
   final DateTime addedDate;
+  final bool? previousIsRepeated;
+  final int? previousRepeatEvery;
+  final RepeatBase? previsouRepeatBase;
 
   @override
   State<AddCustodyDaysDialog> createState() => _AddCustodyDaysDialogState();
@@ -195,9 +225,9 @@ class _AddCustodyDaysDialogState extends State<AddCustodyDaysDialog> {
 
     custodyDayDefinition = .new(
       startDate: widget.addedDate,
-      isRepeated: true,
-      repeatEvery: 2,
-      repeatBase: .week,
+      isRepeated: widget.previousIsRepeated ?? true,
+      repeatEvery: widget.previousRepeatEvery ?? 2,
+      repeatBase: widget.previsouRepeatBase ?? .week,
     );
   }
 
@@ -243,12 +273,17 @@ class _AddCustodyDaysDialogState extends State<AddCustodyDaysDialog> {
                   initialValue: custodyDayDefinition.repeatEvery.toString(),
                   decoration: const InputDecoration(labelText: "nombre"),
                   keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    FilteringTextInputFormatter.deny(RegExp(r'^0+')),
+                  ],
                   onChanged: (value) => setState(() {
-                    if (value != '') {
+                    if (value == '') {
+                      custodyDayDefinition.repeatEvery = null;
+                    } else {
                       custodyDayDefinition.repeatEvery = int.parse(value);
                     }
-                  }), // Only numbers can be entered
+                  }), // Only positive numbers can be entered
                 ),
               ),
               const SizedBox(width: 20),
@@ -279,7 +314,11 @@ class _AddCustodyDaysDialogState extends State<AddCustodyDaysDialog> {
           child: const Text('Annuler'),
         ),
         TextButton(
-          onPressed: () => Navigator.pop(context, custodyDayDefinition),
+          onPressed:
+              custodyDayDefinition.isRepeated &&
+                  custodyDayDefinition.repeatEvery == 0
+              ? null
+              : () => Navigator.pop(context, custodyDayDefinition),
           child: const Text('Valider'),
         ),
       ],
