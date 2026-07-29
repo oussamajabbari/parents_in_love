@@ -149,43 +149,63 @@ class AskChildCustodyState extends State<AskChildCustody>
                 ),
                 value: [],
                 onValueChanged: (dates) async {
-                  if (Custodies.getCustodyStatusForDate(dates[0]) ==
-                      .noCustody) {
-                    final result = await showDialog(
-                      context: context,
-                      barrierDismissible: false,
-                      builder: (BuildContext context) => AddCustodyDaysDialog(
-                        startDate: dates[0],
-                        previousIsReccurent: previousIsReccurent,
-                        previousRepeatEvery: previousRepeatEvery,
-                        previousRepeatBase: previousRepeatBase,
-                      ),
-                    );
-                    if (result is! String) {
-                      final (
-                        :startDate as DateTime,
-                        :isReccurent as bool,
-                        :repeatEvery as int?,
-                        :repeatBase as RepeatBase,
-                      ) = result;
-                      if (isReccurent) {
-                        Custodies.reccurentCustodies.add(
-                          RecurrentCustody(
-                            startDate: startDate,
-                            repeatEvery: repeatEvery!,
-                            repeatBase: repeatBase,
-                          ),
-                        );
-                      } else {
-                        Custodies.exceptionalCustodies.add(startDate);
+                  switch (Custodies.getCustodyStatusForDate(dates[0])) {
+                    case .noCustody:
+                      final result = await showDialog(
+                        context: context,
+                        barrierDismissible: false,
+                        builder: (BuildContext context) => AddCustodyDaysDialog(
+                          startDate: dates[0],
+                          previousIsReccurent: previousIsReccurent,
+                          previousRepeatEvery: previousRepeatEvery,
+                          previousRepeatBase: previousRepeatBase,
+                        ),
+                      );
+                      if (result is! String) {
+                        final (
+                          :startDate as DateTime,
+                          :isReccurent as bool,
+                          :repeatEvery as int?,
+                          :repeatBase as RepeatBase,
+                        ) = result;
+                        if (isReccurent) {
+                          Custodies.reccurentCustodies.add(
+                            RecurrentCustody(
+                              startDate: startDate,
+                              repeatEvery: repeatEvery!,
+                              repeatBase: repeatBase,
+                            ),
+                          );
+                        } else {
+                          Custodies.exceptionalCustodies.add(startDate);
+                        }
+                        previousIsReccurent = isReccurent;
+                        previousRepeatEvery = repeatEvery;
+                        previousRepeatBase = repeatBase;
                       }
-                      previousIsReccurent = isReccurent;
-                      previousRepeatEvery = repeatEvery;
-                      previousRepeatBase = repeatBase;
-                    }
-                    // Re-trigger the drawing
-                    setState(() {});
+                      // Re-trigger the drawing
+                      setState(() {});
+                    case .recurrentCustody:
+                      print('yagadaaaa');
+                    case .exceptionalCustody:
+                      final result = await showDialog(
+                        context: context,
+                        barrierDismissible: false,
+                        builder: (BuildContext context) =>
+                            DeleteExceptionalCustodyDayDialog(
+                              dateToDelete: dates[0],
+                            ),
+                      );
+                      if (result is DateTime) {
+                        Custodies.exceptionalCustodies.remove(result);
+                        // Re-trigger the drawing
+                        setState(() {});
+                      }
+                    case .exceptionalNoCustody:
+                      print('sldfksdflk');
                   }
+                  if (Custodies.getCustodyStatusForDate(dates[0]) ==
+                      .noCustody) {}
                 },
               ),
             ),
@@ -328,6 +348,38 @@ class _AddCustodyDaysDialogState extends State<AddCustodyDaysDialog> {
                   repeatBase: repeatBase,
                 )),
           child: const Text('Valider'),
+        ),
+      ],
+    );
+  }
+}
+
+class DeleteExceptionalCustodyDayDialog extends StatelessWidget {
+  const DeleteExceptionalCustodyDayDialog({
+    super.key,
+    required this.dateToDelete,
+  });
+
+  final DateTime dateToDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Supression de jour exceptionnel de garde'),
+      content: Text(
+        DateFormat.yMMMMEEEEd(
+          Localizations.localeOf(context).languageCode,
+        ).format(dateToDelete),
+        style: Theme.of(context).textTheme.headlineMedium,
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, 'cancel'),
+          child: const Text('Annuler'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(context, dateToDelete),
+          child: const Text('Supprimer', style: TextStyle(color: Colors.red)),
         ),
       ],
     );
