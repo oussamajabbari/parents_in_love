@@ -8,22 +8,67 @@ import 'package:parents_in_love/theme/app_constants.dart';
 
 enum RepeatBase { day, week }
 
-class CustodyDayDefinition {
-  final DateTime startDate;
-  bool isRepeated;
-  int? repeatEvery;
-  RepeatBase? repeatBase;
+enum CustodyStatus {
+  noCustody,
+  recurrentCustody,
+  exceptionalCustody,
+  exceptionalNoCustody,
+}
 
-  CustodyDayDefinition({
+class RecurrentCustody {
+  final DateTime startDate;
+  int repeatEvery;
+  RepeatBase repeatBase;
+  DateTime? endDateExcluded;
+
+  RecurrentCustody({
     required this.startDate,
-    required this.isRepeated,
     required this.repeatEvery,
     required this.repeatBase,
   });
+}
 
-  @override
-  String toString() {
-    return '$startDate, isRepeated: $isRepeated, repeatEvery: $repeatEvery, repeatBase: $repeatBase';
+class Custodies {
+  static List<RecurrentCustody> reccurentCustodies = [];
+  static List<DateTime> exceptionalCustodies = [];
+  static List<DateTime> exceptionalNoCustodies = [];
+
+  static CustodyStatus getCustodyStatusForDate(DateTime date) {
+    if (exceptionalCustodies.contains(date)) {
+      return .exceptionalCustody;
+    }
+    if (exceptionalNoCustodies.contains(date)) {
+      return .exceptionalNoCustody;
+    }
+
+    for (var reccurentCustody in reccurentCustodies) {
+      if (date.isBefore(reccurentCustody.startDate)) {
+        continue;
+      }
+
+      if (reccurentCustody.endDateExcluded != null) {
+        if (date.isAtSameMomentAs(reccurentCustody.endDateExcluded!) ||
+            date.isAfter(reccurentCustody.endDateExcluded!)) {
+          continue;
+        }
+      }
+
+      var delta = date.difference(reccurentCustody.startDate);
+      if (reccurentCustody.repeatBase == RepeatBase.day) {
+        if (delta.inDays % reccurentCustody.repeatEvery == 0) {
+          return .recurrentCustody;
+        }
+      } else {
+        final deltaWeeks = delta.inDays / 7;
+        final deltaWeeksRemainder = delta.inDays % 7;
+        if (deltaWeeksRemainder == 0 &&
+            deltaWeeks % reccurentCustody.repeatEvery == 0) {
+          return .recurrentCustody;
+        }
+      }
+    }
+
+    return .noCustody;
   }
 }
 
@@ -41,58 +86,13 @@ class AskChildCustody extends StatefulWidget {
   AskChildCustodyState createState() => AskChildCustodyState();
 }
 
-enum CustodyDayStatus {
-  noCustody,
-  recurrentCustody,
-  exceptionalCustody,
-  exceptionalNoCustody,
-}
-
 class AskChildCustodyState extends State<AskChildCustody>
     with AutomaticKeepAliveClientMixin<AskChildCustody> {
-  List<DateTime> currentDates = [];
-  DateTime? addedDate;
-  DateTime? removedDate;
-  List<CustodyDayDefinition> custodies = [];
-
   @override
   bool get wantKeepAlive => true;
-
-  CustodyDayStatus getCustodyDayStatus(DateTime date) {
-    // First look for exceptional custodies
-    for (var custody in custodies) {
-      if (!custody.isRepeated) {
-        if (date == custody.startDate) {
-          return CustodyDayStatus.exceptionalCustody;
-        }
-      }
-    }
-
-    for (var custody in custodies) {
-      if (!custody.isRepeated) {
-        continue;
-      }
-
-      var delta = date.difference(custody.startDate);
-      if (delta.inDays < 0) {
-        continue;
-      }
-      if (custody.repeatBase == RepeatBase.day) {
-        if (delta.inDays % custody.repeatEvery! == 0) {
-          return CustodyDayStatus.recurrentCustody;
-        }
-      } else {
-        final deltaWeeks = delta.inDays / 7;
-        final deltaWeeksRemainder = delta.inDays % 7;
-        if (deltaWeeksRemainder == 0 &&
-            deltaWeeks % custody.repeatEvery! == 0) {
-          return CustodyDayStatus.recurrentCustody;
-        }
-      }
-    }
-
-    return CustodyDayStatus.noCustody;
-  }
+  bool? previousIsReccurent;
+  int? previousRepeatEvery;
+  RepeatBase? previousRepeatBase;
 
   @override
   Widget build(BuildContext context) {
@@ -130,12 +130,12 @@ class AskChildCustodyState extends State<AskChildCustody>
                         bool? isToday,
                         TextStyle? textStyle,
                       }) {
-                        switch (getCustodyDayStatus(date)) {
-                          case CustodyDayStatus.exceptionalCustody:
+                        switch (Custodies.getCustodyStatusForDate(date)) {
+                          case .exceptionalCustody:
                             return const Center(
                               child: Text('<3', style: TextStyle(fontSize: 18)),
                             );
-                          case CustodyDayStatus.recurrentCustody:
+                          case .recurrentCustody:
                             return const Center(
                               child: Text(
                                 '👶🏼',
@@ -148,33 +148,40 @@ class AskChildCustodyState extends State<AskChildCustody>
                       },
                 ),
                 value: [],
-                onValueChanged: (newDates) async {
-                  final currentDatesSet = {...currentDates};
-                  final newDatesSet = {...newDates};
-
-                  final addedDateSet = newDatesSet.difference(currentDatesSet);
-                  final removedDateSet = currentDatesSet.difference(
-                    newDatesSet,
-                  );
-
-                  addedDate = addedDateSet.firstOrNull;
-                  removedDate = removedDateSet.firstOrNull;
-
-                  if (addedDate != null) {
+                onValueChanged: (dates) async {
+                  if (Custodies.getCustodyStatusForDate(dates[0]) ==
+                      .noCustody) {
                     final result = await showDialog(
                       context: context,
                       barrierDismissible: false,
-                      builder: (BuildContext context) => custodies.isEmpty
-                          ? AddCustodyDaysDialog(addedDate: addedDate!)
-                          : AddCustodyDaysDialog(
-                              addedDate: addedDate!,
-                              previousIsRepeated: custodies.last.isRepeated,
-                              previousRepeatEvery: custodies.last.repeatEvery,
-                              previsouRepeatBase: custodies.last.repeatBase,
-                            ),
+                      builder: (BuildContext context) => AddCustodyDaysDialog(
+                        startDate: dates[0],
+                        previousIsReccurent: previousIsReccurent,
+                        previousRepeatEvery: previousRepeatEvery,
+                        previousRepeatBase: previousRepeatBase,
+                      ),
                     );
-                    if (result is CustodyDayDefinition) {
-                      custodies.add(result);
+                    if (result is! String) {
+                      final (
+                        :startDate as DateTime,
+                        :isReccurent as bool,
+                        :repeatEvery as int?,
+                        :repeatBase as RepeatBase,
+                      ) = result;
+                      if (isReccurent) {
+                        Custodies.reccurentCustodies.add(
+                          RecurrentCustody(
+                            startDate: startDate,
+                            repeatEvery: repeatEvery!,
+                            repeatBase: repeatBase,
+                          ),
+                        );
+                      } else {
+                        Custodies.exceptionalCustodies.add(startDate);
+                      }
+                      previousIsReccurent = isReccurent;
+                      previousRepeatEvery = repeatEvery;
+                      previousRepeatBase = repeatBase;
                     }
                     // Re-trigger the drawing
                     setState(() {});
@@ -182,12 +189,11 @@ class AskChildCustodyState extends State<AskChildCustody>
                 },
               ),
             ),
-            custodies.isNotEmpty
-                ? Text(custodies.last.toString())
-                : Container(),
             ElevatedButton(
               onPressed: () => setState(() {
-                custodies = [];
+                Custodies.reccurentCustodies = [];
+                Custodies.exceptionalCustodies = [];
+                Custodies.exceptionalNoCustodies = [];
               }),
               child: const Text('Clear'),
             ),
@@ -201,34 +207,33 @@ class AskChildCustodyState extends State<AskChildCustody>
 class AddCustodyDaysDialog extends StatefulWidget {
   const AddCustodyDaysDialog({
     super.key,
-    required this.addedDate,
-    this.previousIsRepeated,
+    required this.startDate,
+    this.previousIsReccurent,
     this.previousRepeatEvery,
-    this.previsouRepeatBase,
+    this.previousRepeatBase,
   });
 
-  final DateTime addedDate;
-  final bool? previousIsRepeated;
+  final DateTime startDate;
+  final bool? previousIsReccurent;
   final int? previousRepeatEvery;
-  final RepeatBase? previsouRepeatBase;
+  final RepeatBase? previousRepeatBase;
 
   @override
   State<AddCustodyDaysDialog> createState() => _AddCustodyDaysDialogState();
 }
 
 class _AddCustodyDaysDialogState extends State<AddCustodyDaysDialog> {
-  late final CustodyDayDefinition custodyDayDefinition;
+  late bool isReccurent;
+  late int? repeatEvery;
+  late RepeatBase repeatBase;
 
   @override
   void initState() {
     super.initState();
 
-    custodyDayDefinition = .new(
-      startDate: widget.addedDate,
-      isRepeated: widget.previousIsRepeated ?? true,
-      repeatEvery: widget.previousRepeatEvery ?? 2,
-      repeatBase: widget.previsouRepeatBase ?? .week,
-    );
+    isReccurent = widget.previousIsReccurent ?? true;
+    repeatEvery = widget.previousRepeatEvery ?? 2;
+    repeatBase = widget.previousRepeatBase ?? .week;
   }
 
   @override
@@ -242,15 +247,15 @@ class _AddCustodyDaysDialogState extends State<AddCustodyDaysDialog> {
           Text(
             DateFormat.yMMMMEEEEd(
               Localizations.localeOf(context).languageCode,
-            ).format(widget.addedDate),
+            ).format(widget.startDate),
             style: Theme.of(context).textTheme.headlineMedium,
           ),
           const SizedBox(height: 20),
           RadioGroup<bool>(
-            groupValue: custodyDayDefinition.isRepeated,
+            groupValue: isReccurent,
             onChanged: (bool? value) {
               setState(() {
-                custodyDayDefinition.isRepeated = value!;
+                isReccurent = value!;
               });
             },
             child: const Column(
@@ -269,8 +274,8 @@ class _AddCustodyDaysDialogState extends State<AddCustodyDaysDialog> {
               SizedBox(
                 width: 110,
                 child: TextFormField(
-                  enabled: custodyDayDefinition.isRepeated,
-                  initialValue: custodyDayDefinition.repeatEvery.toString(),
+                  enabled: isReccurent,
+                  initialValue: repeatEvery.toString(),
                   decoration: const InputDecoration(labelText: "nombre"),
                   keyboardType: TextInputType.number,
                   inputFormatters: [
@@ -279,16 +284,16 @@ class _AddCustodyDaysDialogState extends State<AddCustodyDaysDialog> {
                   ],
                   onChanged: (value) => setState(() {
                     if (value == '') {
-                      custodyDayDefinition.repeatEvery = null;
+                      repeatEvery = null;
                     } else {
-                      custodyDayDefinition.repeatEvery = int.parse(value);
+                      repeatEvery = int.parse(value);
                     }
                   }), // Only positive numbers can be entered
                 ),
               ),
               const SizedBox(width: 20),
               DropdownButton<RepeatBase>(
-                value: custodyDayDefinition.repeatBase,
+                value: repeatBase,
                 items: [
                   const DropdownMenuItem(value: .day, child: Text('jours(s)')),
                   const DropdownMenuItem(
@@ -296,10 +301,10 @@ class _AddCustodyDaysDialogState extends State<AddCustodyDaysDialog> {
                     child: Text('semaine(s)'),
                   ),
                 ],
-                onChanged: custodyDayDefinition.isRepeated
+                onChanged: isReccurent
                     ? (RepeatBase? value) {
                         setState(() {
-                          custodyDayDefinition.repeatBase = value!;
+                          repeatBase = value!;
                         });
                       }
                     : null,
@@ -314,11 +319,14 @@ class _AddCustodyDaysDialogState extends State<AddCustodyDaysDialog> {
           child: const Text('Annuler'),
         ),
         TextButton(
-          onPressed:
-              custodyDayDefinition.isRepeated &&
-                  custodyDayDefinition.repeatEvery == 0
+          onPressed: isReccurent && (repeatEvery == null || repeatEvery == 0)
               ? null
-              : () => Navigator.pop(context, custodyDayDefinition),
+              : () => Navigator.pop(context, (
+                  startDate: widget.startDate,
+                  isReccurent: isReccurent,
+                  repeatEvery: repeatEvery,
+                  repeatBase: repeatBase,
+                )),
           child: const Text('Valider'),
         ),
       ],
