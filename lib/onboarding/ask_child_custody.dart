@@ -259,7 +259,19 @@ class AskChildCustodyState extends State<AskChildCustody>
                         setState(() {});
                       }
                     case .exceptionalNoCustody:
-                      print('sldfksdflk');
+                      final result = await showDialog(
+                        context: context,
+                        barrierDismissible: false,
+                        builder: (BuildContext context) =>
+                            DeleteExceptionalNoCustodyDayDialog(
+                              dateToDelete: dates[0],
+                            ),
+                      );
+                      if (result is DateTime) {
+                        Custodies.exceptionalNoCustodies.remove(result);
+                        // Re-trigger the drawing
+                        setState(() {});
+                      }
                   }
                   if (Custodies.getCustodyStatusForDate(dates[0]) ==
                       .noCustody) {}
@@ -511,6 +523,38 @@ class _DeleteReccurentCustodyDayDialogStateState
             dateToDelete: widget.dateToDelete,
           )),
           child: const Text('Supprimer', style: TextStyle(color: Colors.red)),
+        ),
+      ],
+    );
+  }
+}
+
+class DeleteExceptionalNoCustodyDayDialog extends StatelessWidget {
+  const DeleteExceptionalNoCustodyDayDialog({
+    super.key,
+    required this.dateToDelete,
+  });
+
+  final DateTime dateToDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Supprimer cette exception'),
+      content: Text(
+        DateFormat.yMMMMEEEEd(
+          Localizations.localeOf(context).languageCode,
+        ).format(dateToDelete),
+        style: Theme.of(context).textTheme.headlineMedium,
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, 'cancel'),
+          child: const Text('Annuler'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(context, dateToDelete),
+          child: const Text('Confirmer', style: TextStyle(color: Colors.red)),
         ),
       ],
     );
