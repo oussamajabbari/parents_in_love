@@ -33,6 +33,38 @@ class Custodies {
   static List<DateTime> exceptionalCustodies = [];
   static List<DateTime> exceptionalNoCustodies = [];
 
+  static bool _doesDayMatchRecurrentCustodyDefinition(
+    DateTime date,
+    RecurrentCustody reccurentCustody,
+  ) {
+    if (date.isBefore(reccurentCustody.startDate)) {
+      return false;
+    }
+
+    if (reccurentCustody.endDateExcluded != null) {
+      if (date.isAtSameMomentAs(reccurentCustody.endDateExcluded!) ||
+          date.isAfter(reccurentCustody.endDateExcluded!)) {
+        return false;
+      }
+    }
+
+    var delta = date.difference(reccurentCustody.startDate);
+    if (reccurentCustody.repeatBase == RepeatBase.day) {
+      if (delta.inDays % reccurentCustody.repeatEvery == 0) {
+        return true;
+      }
+    } else {
+      final deltaWeeks = delta.inDays / 7;
+      final deltaWeeksRemainder = delta.inDays % 7;
+      if (deltaWeeksRemainder == 0 &&
+          deltaWeeks % reccurentCustody.repeatEvery == 0) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   static CustodyStatus getCustodyStatusForDate(DateTime date) {
     if (exceptionalCustodies.contains(date)) {
       return .exceptionalCustody;
@@ -42,33 +74,28 @@ class Custodies {
     }
 
     for (var reccurentCustody in reccurentCustodies) {
-      if (date.isBefore(reccurentCustody.startDate)) {
-        continue;
-      }
-
-      if (reccurentCustody.endDateExcluded != null) {
-        if (date.isAtSameMomentAs(reccurentCustody.endDateExcluded!) ||
-            date.isAfter(reccurentCustody.endDateExcluded!)) {
-          continue;
-        }
-      }
-
-      var delta = date.difference(reccurentCustody.startDate);
-      if (reccurentCustody.repeatBase == RepeatBase.day) {
-        if (delta.inDays % reccurentCustody.repeatEvery == 0) {
-          return .recurrentCustody;
-        }
+      if (Custodies._doesDayMatchRecurrentCustodyDefinition(
+        date,
+        reccurentCustody,
+      )) {
+        return .recurrentCustody;
       } else {
-        final deltaWeeks = delta.inDays / 7;
-        final deltaWeeksRemainder = delta.inDays % 7;
-        if (deltaWeeksRemainder == 0 &&
-            deltaWeeks % reccurentCustody.repeatEvery == 0) {
-          return .recurrentCustody;
-        }
+        continue;
       }
     }
 
     return .noCustody;
+  }
+
+  static Iterable<RecurrentCustody> getMatchingReccurentCustodiesForDate(
+    DateTime date,
+  ) {
+    return Custodies.reccurentCustodies.where(
+      (reccurentCustody) => Custodies._doesDayMatchRecurrentCustodyDefinition(
+        date,
+        reccurentCustody,
+      ),
+    );
   }
 }
 
@@ -142,6 +169,10 @@ class AskChildCustodyState extends State<AskChildCustody>
                                 style: TextStyle(fontSize: 18),
                               ),
                             );
+                          case .exceptionalNoCustody:
+                            return const Center(
+                              child: Text('O', style: TextStyle(fontSize: 18)),
+                            );
                           default:
                             return null;
                         }
@@ -186,7 +217,33 @@ class AskChildCustodyState extends State<AskChildCustody>
                       // Re-trigger the drawing
                       setState(() {});
                     case .recurrentCustody:
-                      print('yagadaaaa');
+                      final result = await showDialog(
+                        context: context,
+                        barrierDismissible: false,
+                        builder: (BuildContext context) =>
+                            DeleteReccurentCustodyDayDialogState(
+                              dateToDelete: dates[0],
+                            ),
+                      );
+                      final (
+                        :doDelete as bool,
+                        :deleteAllReccurence as bool?,
+                        :dateToDelete as DateTime?,
+                      ) = result;
+                      if (doDelete) {
+                        if (deleteAllReccurence!) {
+                          for (var reccurentCustody
+                              in Custodies.getMatchingReccurentCustodiesForDate(
+                                dateToDelete!,
+                              )) {
+                            reccurentCustody.endDateExcluded = dateToDelete;
+                          }
+                        } else {
+                          Custodies.exceptionalNoCustodies.add(dateToDelete!);
+                        }
+                        // Re-trigger the drawing
+                        setState(() {});
+                      }
                     case .exceptionalCustody:
                       final result = await showDialog(
                         context: context,
@@ -379,6 +436,79 @@ class DeleteExceptionalCustodyDayDialog extends StatelessWidget {
         ),
         TextButton(
           onPressed: () => Navigator.pop(context, dateToDelete),
+          child: const Text('Supprimer', style: TextStyle(color: Colors.red)),
+        ),
+      ],
+    );
+  }
+}
+
+class DeleteReccurentCustodyDayDialogState extends StatefulWidget {
+  const DeleteReccurentCustodyDayDialogState({
+    super.key,
+    required this.dateToDelete,
+  });
+
+  final DateTime dateToDelete;
+
+  @override
+  State<DeleteReccurentCustodyDayDialogState> createState() =>
+      _DeleteReccurentCustodyDayDialogStateState();
+}
+
+class _DeleteReccurentCustodyDayDialogStateState
+    extends State<DeleteReccurentCustodyDayDialogState> {
+  bool deleteAllReccurence = true;
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Suppression de jours de garde'),
+      content: Column(
+        children: [
+          Text(
+            DateFormat.yMMMMEEEEd(
+              Localizations.localeOf(context).languageCode,
+            ).format(widget.dateToDelete),
+            style: Theme.of(context).textTheme.headlineMedium,
+          ),
+          RadioGroup<bool>(
+            groupValue: deleteAllReccurence,
+            onChanged: (bool? value) {
+              setState(() {
+                deleteAllReccurence = value!;
+              });
+            },
+            child: const Column(
+              children: <Widget>[
+                RadioListTile(
+                  title: Text('Supprimer ce jour ainsi que les suivants'),
+                  value: true,
+                ),
+                RadioListTile(
+                  title: Text('Supprimer uniquement ce jour'),
+                  value: false,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, (
+            doDelete: false,
+            deleteAllReccurence: null,
+            dateToDelete: null,
+          )),
+          child: const Text('Annuler'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(context, (
+            doDelete: true,
+            deleteAllReccurence: deleteAllReccurence,
+            dateToDelete: widget.dateToDelete,
+          )),
           child: const Text('Supprimer', style: TextStyle(color: Colors.red)),
         ),
       ],
