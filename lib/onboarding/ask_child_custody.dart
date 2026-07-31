@@ -465,6 +465,7 @@ class _DeleteReccurentCustodyDayDialogStateState
     return AlertDialog(
       title: const Text('Suppression de jours de garde'),
       content: Column(
+        mainAxisSize: .min,
         children: [
           Text(
             DateFormat.yMMMMEEEEd(
