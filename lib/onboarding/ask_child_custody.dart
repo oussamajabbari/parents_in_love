@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -120,6 +122,7 @@ class AskChildCustodyState extends State<AskChildCustody>
   bool? previousIsReccurent;
   int? previousRepeatEvery;
   RepeatBase? previousRepeatBase;
+  bool? previousDeleteAllReccurence;
 
   @override
   Widget build(BuildContext context) {
@@ -223,6 +226,8 @@ class AskChildCustodyState extends State<AskChildCustody>
                         builder: (BuildContext context) =>
                             DeleteReccurentCustodyDayDialogState(
                               dateToDelete: dates[0],
+                              previousDeleteAllReccurence:
+                                  previousDeleteAllReccurence,
                             ),
                       );
                       final (
@@ -241,6 +246,7 @@ class AskChildCustodyState extends State<AskChildCustody>
                         } else {
                           Custodies.exceptionalNoCustodies.add(dateToDelete!);
                         }
+                        previousDeleteAllReccurence = deleteAllReccurence;
                         // Re-trigger the drawing
                         setState(() {});
                       }
@@ -297,9 +303,9 @@ class AddCustodyDaysDialog extends StatefulWidget {
   const AddCustodyDaysDialog({
     super.key,
     required this.startDate,
-    this.previousIsReccurent,
-    this.previousRepeatEvery,
-    this.previousRepeatBase,
+    required this.previousIsReccurent,
+    required this.previousRepeatEvery,
+    required this.previousRepeatBase,
   });
 
   final DateTime startDate;
@@ -459,9 +465,11 @@ class DeleteReccurentCustodyDayDialogState extends StatefulWidget {
   const DeleteReccurentCustodyDayDialogState({
     super.key,
     required this.dateToDelete,
+    required this.previousDeleteAllReccurence,
   });
 
   final DateTime dateToDelete;
+  final bool? previousDeleteAllReccurence;
 
   @override
   State<DeleteReccurentCustodyDayDialogState> createState() =>
@@ -470,7 +478,14 @@ class DeleteReccurentCustodyDayDialogState extends StatefulWidget {
 
 class _DeleteReccurentCustodyDayDialogStateState
     extends State<DeleteReccurentCustodyDayDialogState> {
-  bool deleteAllReccurence = true;
+  late bool deleteAllReccurence;
+
+  @override
+  void initState() {
+    super.initState();
+
+    deleteAllReccurence = widget.previousDeleteAllReccurence ?? true;
+  }
 
   @override
   Widget build(BuildContext context) {

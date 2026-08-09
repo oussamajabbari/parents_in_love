@@ -15,7 +15,7 @@ Future<void> main() async {
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   if (!kReleaseMode) {
-    const String devMachineIP = '192.168.1.43';
+    const String devMachineIP = '192.168.1.97';
     //const String devMachineIP = 'localhost';
     //const String devMachineIP = '10.92.10.211';
 
