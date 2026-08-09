@@ -162,19 +162,38 @@ class AskChildCustodyState extends State<AskChildCustody>
                       }) {
                         switch (Custodies.getCustodyStatusForDate(date)) {
                           case .exceptionalCustody:
-                            return const Center(
-                              child: Text('<3', style: TextStyle(fontSize: 18)),
+                            return Container(
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.green,
+                              ),
+                              child: Center(
+                                child: Text(
+                                  date.day.toString(),
+                                  style: const TextStyle(color: Colors.white),
+                                ),
+                              ),
                             );
                           case .recurrentCustody:
-                            return const Center(
-                              child: Text(
-                                '👶🏼',
-                                style: TextStyle(fontSize: 18),
+                            return Container(
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.blue,
+                              ),
+                              child: Center(
+                                child: Text(
+                                  date.day.toString(),
+                                  style: const TextStyle(color: Colors.white),
+                                ),
                               ),
                             );
                           case .exceptionalNoCustody:
-                            return const Center(
-                              child: Text('O', style: TextStyle(fontSize: 18)),
+                            return Container(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.blue),
+                              ),
+                              child: Center(child: Text(date.day.toString())),
                             );
                           default:
                             return null;
@@ -555,7 +574,9 @@ class DeleteExceptionalNoCustodyDayDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Supprimer cette exception'),
+      title: const Text(
+        'Supprimer cette exception et rétablir le jour de garde',
+      ),
       content: Text(
         DateFormat.yMMMMEEEEd(
           Localizations.localeOf(context).languageCode,
