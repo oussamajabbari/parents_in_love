@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -8,7 +6,14 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:parents_in_love/theme/app_constants.dart';
 
-enum RepeatBase { day, week }
+enum RepeatBase {
+  day(value: 'day'),
+  week(value: 'week');
+
+  const RepeatBase({required this.value});
+
+  final String value;
+}
 
 enum CustodyStatus {
   noCustody,
@@ -28,6 +33,15 @@ class RecurrentCustody {
     required this.repeatEvery,
     required this.repeatBase,
   });
+
+  Map<String, dynamic> toSerializableMap() {
+    return {
+      'startDate': startDate,
+      'repeatEvery': repeatEvery,
+      'repeatBase': repeatBase.value,
+      'endDateExcluded': endDateExcluded,
+    };
+  }
 }
 
 class Custodies {
@@ -99,6 +113,12 @@ class Custodies {
       ),
     );
   }
+
+  static bool isEmpty() {
+    return Custodies.reccurentCustodies.isEmpty &&
+        Custodies.exceptionalCustodies.isEmpty &&
+        Custodies.exceptionalNoCustodies.isEmpty;
+  }
 }
 
 class AskChildCustody extends StatefulWidget {
@@ -144,177 +164,305 @@ class AskChildCustodyState extends State<AskChildCustody>
             const Text(
               'À présent, définissons vos jours de garde et vos jours sans les enfants. 👶🏼',
             ),
-            Card(
-              margin: const EdgeInsets.all(0),
-              child: CalendarDatePicker2(
-                config: CalendarDatePicker2Config(
-                  firstDayOfWeek: MaterialLocalizations.of(
-                    context,
-                  ).firstDayOfWeekIndex,
-                  dayBuilder:
-                      ({
-                        required DateTime date,
-                        BoxDecoration? decoration,
-                        bool? isDisabled,
-                        bool? isSelected,
-                        bool? isToday,
-                        TextStyle? textStyle,
-                      }) {
-                        switch (Custodies.getCustodyStatusForDate(date)) {
-                          case .exceptionalCustody:
-                            return Container(
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.green,
-                              ),
-                              child: Center(
-                                child: Text(
-                                  date.day.toString(),
-                                  style: const TextStyle(color: Colors.white),
+            Column(
+              children: [
+                Card(
+                  margin: const EdgeInsets.all(0),
+                  child: CalendarDatePicker2(
+                    config: CalendarDatePicker2Config(
+                      firstDayOfWeek: MaterialLocalizations.of(
+                        context,
+                      ).firstDayOfWeekIndex,
+                      dayBuilder:
+                          ({
+                            required DateTime date,
+                            BoxDecoration? decoration,
+                            bool? isDisabled,
+                            bool? isSelected,
+                            bool? isToday,
+                            TextStyle? textStyle,
+                          }) {
+                            switch (Custodies.getCustodyStatusForDate(date)) {
+                              case .exceptionalCustody:
+                                return Container(
+                                  decoration: const BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Colors.green,
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(2.0),
+                                    child: Center(
+                                      child: Text(
+                                        date.day.toString(),
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              case .recurrentCustody:
+                                return Padding(
+                                  padding: const EdgeInsets.all(2.0),
+                                  child: Container(
+                                    decoration: const BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Colors.blue,
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        date.day.toString(),
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              case .exceptionalNoCustody:
+                                return Padding(
+                                  padding: const EdgeInsets.all(2.0),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(color: Colors.blue),
+                                    ),
+                                    child: Center(
+                                      child: Text(date.day.toString()),
+                                    ),
+                                  ),
+                                );
+                              default:
+                                // Remove today outline that is misleading with "exceptional no custody"
+                                if (isToday != null && isToday) {
+                                  return Center(
+                                    child: Text(
+                                      date.day.toString(),
+                                      style: textStyle,
+                                    ),
+                                  );
+                                }
+                                return null;
+                            }
+                          },
+                    ),
+                    value: [],
+                    onValueChanged: (dates) async {
+                      switch (Custodies.getCustodyStatusForDate(dates[0])) {
+                        case .noCustody:
+                          final result = await showDialog(
+                            context: context,
+                            barrierDismissible: false,
+                            builder: (BuildContext context) =>
+                                AddCustodyDaysDialog(
+                                  startDate: dates[0],
+                                  previousIsReccurent: previousIsReccurent,
+                                  previousRepeatEvery: previousRepeatEvery,
+                                  previousRepeatBase: previousRepeatBase,
                                 ),
-                              ),
-                            );
-                          case .recurrentCustody:
-                            return Container(
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.blue,
-                              ),
-                              child: Center(
-                                child: Text(
-                                  date.day.toString(),
-                                  style: const TextStyle(color: Colors.white),
+                          );
+                          if (result is! String) {
+                            final (
+                              :startDate as DateTime,
+                              :isReccurent as bool,
+                              :repeatEvery as int?,
+                              :repeatBase as RepeatBase,
+                            ) = result;
+                            if (isReccurent) {
+                              Custodies.reccurentCustodies.add(
+                                RecurrentCustody(
+                                  startDate: startDate,
+                                  repeatEvery: repeatEvery!,
+                                  repeatBase: repeatBase,
                                 ),
-                              ),
-                            );
-                          case .exceptionalNoCustody:
-                            return Container(
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(color: Colors.blue),
-                              ),
-                              child: Center(child: Text(date.day.toString())),
-                            );
-                          default:
-                            return null;
-                        }
-                      },
+                              );
+                            } else {
+                              Custodies.exceptionalCustodies.add(startDate);
+                            }
+                            previousIsReccurent = isReccurent;
+                            previousRepeatEvery = repeatEvery;
+                            previousRepeatBase = repeatBase;
+                          }
+                          // Re-trigger the drawing
+                          setState(() {});
+                        case .recurrentCustody:
+                          final result = await showDialog(
+                            context: context,
+                            barrierDismissible: false,
+                            builder: (BuildContext context) =>
+                                DeleteReccurentCustodyDayDialogState(
+                                  dateToDelete: dates[0],
+                                  previousDeleteAllReccurence:
+                                      previousDeleteAllReccurence,
+                                ),
+                          );
+                          final (
+                            :doDelete as bool,
+                            :deleteAllReccurence as bool?,
+                            :dateToDelete as DateTime?,
+                          ) = result;
+                          if (doDelete) {
+                            if (deleteAllReccurence!) {
+                              for (var reccurentCustody
+                                  in Custodies.getMatchingReccurentCustodiesForDate(
+                                    dateToDelete!,
+                                  )) {
+                                reccurentCustody.endDateExcluded = dateToDelete;
+                              }
+                            } else {
+                              Custodies.exceptionalNoCustodies.add(
+                                dateToDelete!,
+                              );
+                            }
+                            previousDeleteAllReccurence = deleteAllReccurence;
+                            // Re-trigger the drawing
+                            setState(() {});
+                          }
+                        case .exceptionalCustody:
+                          final result = await showDialog(
+                            context: context,
+                            barrierDismissible: false,
+                            builder: (BuildContext context) =>
+                                DeleteExceptionalCustodyDayDialog(
+                                  dateToDelete: dates[0],
+                                ),
+                          );
+                          if (result is DateTime) {
+                            Custodies.exceptionalCustodies.remove(result);
+                            // Re-trigger the drawing
+                            setState(() {});
+                          }
+                        case .exceptionalNoCustody:
+                          final result = await showDialog(
+                            context: context,
+                            barrierDismissible: false,
+                            builder: (BuildContext context) =>
+                                DeleteExceptionalNoCustodyDayDialog(
+                                  dateToDelete: dates[0],
+                                ),
+                          );
+                          if (result is DateTime) {
+                            Custodies.exceptionalNoCustodies.remove(result);
+                            // Re-trigger the drawing
+                            setState(() {});
+                          }
+                      }
+                      if (Custodies.getCustodyStatusForDate(dates[0]) ==
+                          .noCustody) {}
+                    },
+                  ),
                 ),
-                value: [],
-                onValueChanged: (dates) async {
-                  switch (Custodies.getCustodyStatusForDate(dates[0])) {
-                    case .noCustody:
+                const SizedBox(height: 5),
+                Row(
+                  mainAxisAlignment: .end,
+                  children: [
+                    TextButton.icon(
+                      label: const Text('Effacer'),
+                      iconAlignment: .end,
+                      onPressed: Custodies.isEmpty()
+                          ? null
+                          : () async {
+                              final result = await showDialog(
+                                context: context,
+                                barrierDismissible: false,
+                                builder: (BuildContext context) => AlertDialog(
+                                  title: const Text('Tout supprimer'),
+                                  content: const Text(
+                                    'Etes-vous sûr de vouloir supprimer tous les jours de garde déjà configurés ?',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, 'cancel'),
+                                      child: const Text('Annuler'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, 'confirm'),
+                                      child: const Text(
+                                        'Supprimer',
+                                        style: TextStyle(color: Colors.red),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                              if (result == 'confirm') {
+                                setState(() {
+                                  Custodies.reccurentCustodies = [];
+                                  Custodies.exceptionalCustodies = [];
+                                  Custodies.exceptionalNoCustodies = [];
+                                });
+                              }
+                            },
+                      icon: const Icon(Icons.clear),
+                      //label: const Text('Effacer'),
+                      //iconAlignment: .end,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                OutlinedButton(
+                  onPressed: () => widget.onPreviousPressed(),
+                  child: const Text('Précédent'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (Custodies.isEmpty()) {
                       final result = await showDialog(
                         context: context,
                         barrierDismissible: false,
-                        builder: (BuildContext context) => AddCustodyDaysDialog(
-                          startDate: dates[0],
-                          previousIsReccurent: previousIsReccurent,
-                          previousRepeatEvery: previousRepeatEvery,
-                          previousRepeatBase: previousRepeatBase,
+                        builder: (BuildContext context) => AlertDialog(
+                          title: const Text('Calendrier vide'),
+                          content: const Text(
+                            "Vous n'avez pas saisi de jours de garde, confirmer et continuer quand même ?",
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, 'cancel'),
+                              child: const Text('Annuler'),
+                            ),
+                            TextButton(
+                              onPressed: () =>
+                                  Navigator.pop(context, 'confirm'),
+                              child: const Text('Confirmer'),
+                            ),
+                          ],
                         ),
                       );
-                      if (result is! String) {
-                        final (
-                          :startDate as DateTime,
-                          :isReccurent as bool,
-                          :repeatEvery as int?,
-                          :repeatBase as RepeatBase,
-                        ) = result;
-                        if (isReccurent) {
-                          Custodies.reccurentCustodies.add(
-                            RecurrentCustody(
-                              startDate: startDate,
-                              repeatEvery: repeatEvery!,
-                              repeatBase: repeatBase,
-                            ),
-                          );
-                        } else {
-                          Custodies.exceptionalCustodies.add(startDate);
-                        }
-                        previousIsReccurent = isReccurent;
-                        previousRepeatEvery = repeatEvery;
-                        previousRepeatBase = repeatBase;
+                      if (result == 'confirm') {
+                        saveCustodies(userDoc);
+                        widget.onNextPressed();
                       }
-                      // Re-trigger the drawing
-                      setState(() {});
-                    case .recurrentCustody:
-                      final result = await showDialog(
-                        context: context,
-                        barrierDismissible: false,
-                        builder: (BuildContext context) =>
-                            DeleteReccurentCustodyDayDialogState(
-                              dateToDelete: dates[0],
-                              previousDeleteAllReccurence:
-                                  previousDeleteAllReccurence,
-                            ),
-                      );
-                      final (
-                        :doDelete as bool,
-                        :deleteAllReccurence as bool?,
-                        :dateToDelete as DateTime?,
-                      ) = result;
-                      if (doDelete) {
-                        if (deleteAllReccurence!) {
-                          for (var reccurentCustody
-                              in Custodies.getMatchingReccurentCustodiesForDate(
-                                dateToDelete!,
-                              )) {
-                            reccurentCustody.endDateExcluded = dateToDelete;
-                          }
-                        } else {
-                          Custodies.exceptionalNoCustodies.add(dateToDelete!);
-                        }
-                        previousDeleteAllReccurence = deleteAllReccurence;
-                        // Re-trigger the drawing
-                        setState(() {});
-                      }
-                    case .exceptionalCustody:
-                      final result = await showDialog(
-                        context: context,
-                        barrierDismissible: false,
-                        builder: (BuildContext context) =>
-                            DeleteExceptionalCustodyDayDialog(
-                              dateToDelete: dates[0],
-                            ),
-                      );
-                      if (result is DateTime) {
-                        Custodies.exceptionalCustodies.remove(result);
-                        // Re-trigger the drawing
-                        setState(() {});
-                      }
-                    case .exceptionalNoCustody:
-                      final result = await showDialog(
-                        context: context,
-                        barrierDismissible: false,
-                        builder: (BuildContext context) =>
-                            DeleteExceptionalNoCustodyDayDialog(
-                              dateToDelete: dates[0],
-                            ),
-                      );
-                      if (result is DateTime) {
-                        Custodies.exceptionalNoCustodies.remove(result);
-                        // Re-trigger the drawing
-                        setState(() {});
-                      }
-                  }
-                  if (Custodies.getCustodyStatusForDate(dates[0]) ==
-                      .noCustody) {}
-                },
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () => setState(() {
-                Custodies.reccurentCustodies = [];
-                Custodies.exceptionalCustodies = [];
-                Custodies.exceptionalNoCustodies = [];
-              }),
-              child: const Text('Clear'),
+                    } else {
+                      saveCustodies(userDoc);
+                      widget.onNextPressed();
+                    }
+                  },
+                  child: const Text('Suivant'),
+                ),
+              ],
             ),
           ],
         ),
       ),
     );
+  }
+
+  void saveCustodies(DocumentReference<Map<String, dynamic>> userDoc) {
+    userDoc.set({
+      'custodies': {
+        'reccurentCustodies': Custodies.reccurentCustodies
+            .map((r) => r.toSerializableMap())
+            .toList(),
+        'exceptionalCustodies': Custodies.exceptionalCustodies,
+        'exceptionalNoCustodies': Custodies.exceptionalNoCustodies,
+      },
+    }, SetOptions(merge: true));
   }
 }
 
