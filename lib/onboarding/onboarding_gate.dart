@@ -8,6 +8,7 @@ import 'package:parents_in_love/onboarding/ask_child_custody.dart';
 import 'package:parents_in_love/onboarding/ask_name.dart';
 import 'package:parents_in_love/onboarding/ask_sex.dart';
 import 'package:parents_in_love/onboarding/intro.dart';
+import 'package:parents_in_love/onboarding/upload_profile_pictures.dart';
 import 'package:parents_in_love/theme/app_constants.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
@@ -64,39 +65,37 @@ class _OnboardingGateState extends State<OnboardingGate> {
                 AppConstants.spacingSM,
                 AppConstants.spacingMD,
               ),
-              child: Stack(
+              child: Column(
                 children: [
-                  PageView(
-                    controller: _pageController,
-                    //physics: const NeverScrollableScrollPhysics(),
-                    children: [
-                      Intro(onNextPressed: _goToNextPage),
-                      AskBirth(
-                        onPreviousPressed: _goToPrevioustPage,
-                        onNextPressed: _goToNextPage,
-                      ),
-                      AskName(
-                        onPreviousPressed: _goToPrevioustPage,
-                        onNextPressed: _goToNextPage,
-                      ),
-                      AskSex(
-                        onPreviousPressed: _goToPrevioustPage,
-                        onNextPressed: _goToNextPage,
-                      ),
-                      AskChildCustody(
-                        onPreviousPressed: _goToPrevioustPage,
-                        onNextPressed: _goToNextPage,
-                      ),
-                      const AcceptCookies(),
-                    ],
-                  ),
-                  Container(
-                    alignment: const Alignment(0, 0.9),
-                    child: SmoothPageIndicator(
+                  Expanded(
+                    child: PageView(
                       controller: _pageController,
-                      count: 6,
+                      //physics: const NeverScrollableScrollPhysics(),
+                      children: [
+                        const UploadProfilePictures(),
+                        Intro(onNextPressed: _goToNextPage),
+                        AskBirth(
+                          onPreviousPressed: _goToPrevioustPage,
+                          onNextPressed: _goToNextPage,
+                        ),
+                        AskName(
+                          onPreviousPressed: _goToPrevioustPage,
+                          onNextPressed: _goToNextPage,
+                        ),
+                        AskSex(
+                          onPreviousPressed: _goToPrevioustPage,
+                          onNextPressed: _goToNextPage,
+                        ),
+                        AskChildCustody(
+                          onPreviousPressed: _goToPrevioustPage,
+                          onNextPressed: _goToNextPage,
+                        ),
+
+                        const AcceptCookies(),
+                      ],
                     ),
                   ),
+                  SmoothPageIndicator(controller: _pageController, count: 7),
                 ],
               ),
             );
