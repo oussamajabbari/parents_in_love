@@ -32,6 +32,7 @@ class _UploadProfilePicturesState extends State<UploadProfilePictures> {
     final userDoc = FirebaseFirestore.instance
         .collection('users_parameters')
         .doc(userUid);
+    final storageRef = FirebaseStorage.instance.ref();
 
     final List<Widget> gridItems =
         List.from(
@@ -55,7 +56,6 @@ class _UploadProfilePicturesState extends State<UploadProfilePictures> {
 
                 profilePicturesPaths.add(filePath);
 
-                final storageRef = FirebaseStorage.instance.ref();
                 storageRef.child(filePath).putFile(File(pickedFile.path));
                 userDoc.set({
                   'profilePictures': profilePicturesPaths,
@@ -135,7 +135,17 @@ class _UploadProfilePicturesState extends State<UploadProfilePictures> {
                                 if (result == 'confirm') {
                                   setState(() {
                                     pickedFiles = [];
+                                    for (var profilePicturesPath
+                                        in profilePicturesPaths) {
+                                      storageRef
+                                          .child(profilePicturesPath)
+                                          .delete();
+                                    }
                                     profilePicturesPaths = [];
+
+                                    userDoc.set({
+                                      'profilePictures': [],
+                                    }, SetOptions(merge: true));
                                   });
                                 }
                               },
