@@ -9,6 +9,7 @@ import 'package:parents_in_love/theme/app_theme.dart';
 import 'firebase_options.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,6 +22,7 @@ Future<void> main() async {
 
     await FirebaseAuth.instance.useAuthEmulator(devMachineIP, 9099);
     FirebaseFirestore.instance.useFirestoreEmulator(devMachineIP, 8080);
+    await FirebaseStorage.instance.useStorageEmulator(devMachineIP, 9199);
   }
   runApp(const ProviderScope(child: MyApp()));
 }

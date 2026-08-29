@@ -62,7 +62,6 @@ class DefaultFirebaseOptions {
     projectId: 'parents-in-love',
     storageBucket: 'parents-in-love.firebasestorage.app',
   );
-
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyAZJNR3oCKuffB5yotrn0ZpKJg1QbldLQw',
     appId: '1:934913489525:ios:13e48f70a8aa53e55a563c',
@@ -71,5 +70,4 @@ class DefaultFirebaseOptions {
     storageBucket: 'parents-in-love.firebasestorage.app',
     iosBundleId: 'com.example.parentsInLove',
   );
-
 }

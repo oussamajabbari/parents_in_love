@@ -1,11 +1,21 @@
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:parents_in_love/theme/app_constants.dart';
+import 'package:uuid/uuid.dart';
 
 class UploadProfilePictures extends StatefulWidget {
-  const UploadProfilePictures({super.key});
+  final VoidCallback onPreviousPressed;
+  final VoidCallback onNextPressed;
+  const UploadProfilePictures({
+    super.key,
+    required this.onPreviousPressed,
+    required this.onNextPressed,
+  });
 
   @override
   State<UploadProfilePictures> createState() => _UploadProfilePicturesState();
@@ -14,9 +24,15 @@ class UploadProfilePictures extends StatefulWidget {
 class _UploadProfilePicturesState extends State<UploadProfilePictures> {
   final ImagePicker _picker = ImagePicker();
   List<XFile> pickedFiles = [];
+  List<String> profilePicturesPaths = [];
 
   @override
   Widget build(BuildContext context) {
+    final String userUid = FirebaseAuth.instance.currentUser!.uid;
+    final userDoc = FirebaseFirestore.instance
+        .collection('users_parameters')
+        .doc(userUid);
+
     final List<Widget> gridItems =
         List.from(
           pickedFiles.map(
@@ -31,11 +47,24 @@ class _UploadProfilePicturesState extends State<UploadProfilePictures> {
               final XFile? pickedFile = await _picker.pickImage(
                 source: .gallery,
               );
-              setState(() {
-                if (pickedFile != null) {
+
+              if (pickedFile != null) {
+                final fileNameUuid = const Uuid().v4();
+                final String filePath =
+                    "$userUid/profilePictures/$fileNameUuid)";
+
+                profilePicturesPaths.add(filePath);
+
+                final storageRef = FirebaseStorage.instance.ref();
+                storageRef.child(filePath).putFile(File(pickedFile.path));
+                userDoc.set({
+                  'profilePictures': profilePicturesPaths,
+                }, SetOptions(merge: true));
+
+                setState(() {
                   pickedFiles.add(pickedFile);
-                }
-              });
+                });
+              }
             },
             icon: const Icon(Icons.add),
             style: ButtonStyle(
@@ -53,29 +82,90 @@ class _UploadProfilePicturesState extends State<UploadProfilePictures> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
+            const SizedBox(height: AppConstants.spacingLG),
             Text(
               'Ajoutez une ou des photos de profil',
               style: Theme.of(context).textTheme.titleLarge,
             ),
+            const SizedBox(height: AppConstants.spacingLG),
             Expanded(
-              child: GridView.count(
-                mainAxisSpacing: 8,
-                crossAxisSpacing: 8,
-                crossAxisCount: 3,
-                children: gridItems,
+              child: Column(
+                children: [
+                  GridView.count(
+                    shrinkWrap: true,
+                    mainAxisSpacing: 8,
+                    crossAxisSpacing: 8,
+                    crossAxisCount: 3,
+                    children: gridItems,
+                  ),
+                  Row(
+                    mainAxisAlignment: .end,
+                    children: [
+                      TextButton.icon(
+                        label: const Text('Effacer'),
+                        iconAlignment: .end,
+                        onPressed: pickedFiles.isEmpty
+                            ? null
+                            : () async {
+                                final result = await showDialog(
+                                  context: context,
+                                  barrierDismissible: false,
+                                  builder: (BuildContext context) => AlertDialog(
+                                    title: const Text('Tout supprimer'),
+                                    content: const Text(
+                                      'Etes-vous sûr de vouloir supprimer les photos ?',
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () =>
+                                            Navigator.pop(context, 'cancel'),
+                                        child: const Text('Annuler'),
+                                      ),
+                                      TextButton(
+                                        onPressed: () =>
+                                            Navigator.pop(context, 'confirm'),
+                                        child: const Text(
+                                          'Supprimer',
+                                          style: TextStyle(color: Colors.red),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                                if (result == 'confirm') {
+                                  setState(() {
+                                    pickedFiles = [];
+                                    profilePicturesPaths = [];
+                                  });
+                                }
+                              },
+                        icon: const Icon(Icons.clear),
+                        //label: const Text('Effacer'),
+                        //iconAlignment: .end,
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
+
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                OutlinedButton(onPressed: () {}, child: const Text('Ajouter')),
                 OutlinedButton(
-                  onPressed: () => setState(() {
-                    pickedFiles = [];
-                  }),
-                  child: const Text('Supprimer'),
+                  onPressed: () => widget.onPreviousPressed(),
+                  child: const Text('Précédent'),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: pickedFiles.isEmpty
+                      ? null
+                      : () => widget.onNextPressed(),
+                  child: const Text('Suivant'),
                 ),
               ],
             ),
+            const SizedBox(height: AppConstants.spacingLG),
           ],
         ),
       ),

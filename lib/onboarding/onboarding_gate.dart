@@ -72,7 +72,10 @@ class _OnboardingGateState extends State<OnboardingGate> {
                       controller: _pageController,
                       //physics: const NeverScrollableScrollPhysics(),
                       children: [
-                        const UploadProfilePictures(),
+                        UploadProfilePictures(
+                          onPreviousPressed: _goToPrevioustPage,
+                          onNextPressed: _goToNextPage,
+                        ),
                         Intro(onNextPressed: _goToNextPage),
                         AskBirth(
                           onPreviousPressed: _goToPrevioustPage,
