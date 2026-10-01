@@ -46,7 +46,7 @@ class _OnboardingGateState extends State<OnboardingGate> {
   Widget build(BuildContext context) {
     final String userUid = FirebaseAuth.instance.currentUser!.uid;
     final userDoc = FirebaseFirestore.instance
-        .collection('users_parameters')
+        .collection('users_profiles')
         .doc(userUid);
     return StreamBuilder(
       stream: userDoc.snapshots(),
@@ -56,7 +56,7 @@ class _OnboardingGateState extends State<OnboardingGate> {
         } else if (!snapshot.hasData) {
           return const Text('Waiting for user doc');
         } else {
-          final usersParameters = snapshot.data!.data();
+          final UserProfile = snapshot.data!.data();
           if (true) {
             return Padding(
               padding: const EdgeInsets.fromLTRB(
@@ -72,11 +72,11 @@ class _OnboardingGateState extends State<OnboardingGate> {
                       controller: _pageController,
                       //physics: const NeverScrollableScrollPhysics(),
                       children: [
+                        Intro(onNextPressed: _goToNextPage),
                         UploadProfilePictures(
                           onPreviousPressed: _goToPrevioustPage,
                           onNextPressed: _goToNextPage,
                         ),
-                        Intro(onNextPressed: _goToNextPage),
                         AskBirth(
                           onPreviousPressed: _goToPrevioustPage,
                           onNextPressed: _goToNextPage,

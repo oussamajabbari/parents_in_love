@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -26,46 +27,82 @@ class _UploadProfilePicturesState extends State<UploadProfilePictures> {
   List<XFile> pickedFiles = [];
   List<String> profilePicturesPaths = [];
 
+  void loadProfilePictures() async {
+    final String userUid = FirebaseAuth.instance.currentUser!.uid;
+    final storageRef = FirebaseStorage.instance.ref();
+    final userDoc = FirebaseFirestore.instance
+        .collection('users_profiles')
+        .doc(userUid);
+
+    await userDoc.get().then((event) async {
+      final UserProfile = event.data();
+      if (UserProfile != null && UserProfile.containsKey('profilePictures')) {
+        final profilePictures = UserProfile['profilePictures'] as List<dynamic>;
+
+        for (String profilePictureUrl in profilePictures) {
+          final fileRef = storageRef.child(profilePictureUrl);
+          final Uint8List? data = await fileRef.getData();
+          if (data != null) {
+            setState(() {
+              pickedFiles.add(XFile.fromData(data));
+            });
+          }
+        }
+      }
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    //loadProfilePictures();
+
+    final storageRef = FirebaseStorage.instance.ref();
+  }
+
   @override
   Widget build(BuildContext context) {
     final String userUid = FirebaseAuth.instance.currentUser!.uid;
     final userDoc = FirebaseFirestore.instance
-        .collection('users_parameters')
+        .collection('users_profiles')
         .doc(userUid);
     final storageRef = FirebaseStorage.instance.ref();
 
     final List<Widget> gridItems =
         List.from(
-          pickedFiles.map(
-            (f) => ClipRRect(
+          pickedFiles.map((f) {
+            return ClipRRect(
               borderRadius: BorderRadiusGeometry.circular(12),
               child: Image.file(File(f.path), fit: BoxFit.cover),
-            ),
-          ),
+            );
+          }),
         )..add(
           IconButton.outlined(
-            onPressed: () async {
-              final XFile? pickedFile = await _picker.pickImage(
-                source: .gallery,
-              );
+            onPressed: pickedFiles.length >= 5
+                ? null
+                : () async {
+                    final XFile? pickedFile = await _picker.pickImage(
+                      source: .gallery,
+                    );
 
-              if (pickedFile != null) {
-                final fileNameUuid = const Uuid().v4();
-                final String filePath =
-                    "$userUid/profilePictures/$fileNameUuid)";
+                    if (pickedFile != null) {
+                      final fileNameUuid = const Uuid().v4();
+                      final String filePath =
+                          "$userUid/profilePictures/$fileNameUuid)";
 
-                profilePicturesPaths.add(filePath);
+                      profilePicturesPaths.add(filePath);
 
-                storageRef.child(filePath).putFile(File(pickedFile.path));
-                userDoc.set({
-                  'profilePictures': profilePicturesPaths,
-                }, SetOptions(merge: true));
+                      storageRef.child(filePath).putFile(File(pickedFile.path));
+                      userDoc.set({
+                        'profilePictures': profilePicturesPaths,
+                      }, SetOptions(merge: true));
 
-                setState(() {
-                  pickedFiles.add(pickedFile);
-                });
-              }
-            },
+                      setState(() {
+                        pickedFiles.add(pickedFile);
+                      });
+                    }
+                  },
             icon: const Icon(Icons.add),
             style: ButtonStyle(
               shape: WidgetStateProperty.all(

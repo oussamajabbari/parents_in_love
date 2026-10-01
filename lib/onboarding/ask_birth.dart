@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:parents_in_love/theme/app_constants.dart';
+import 'package:parents_in_love/user_profile.dart';
 
 class AskBirth extends StatefulWidget {
   final VoidCallback onPreviousPressed;
@@ -33,11 +34,6 @@ class AskBirthState extends State<AskBirth>
   Widget build(BuildContext context) {
     super.build(context);
 
-    final String userUid = FirebaseAuth.instance.currentUser!.uid;
-    final userDoc = FirebaseFirestore.instance
-        .collection('users_parameters')
-        .doc(userUid);
-
     return Card(
       color: Theme.of(context).colorScheme.surface,
       elevation: 5,
@@ -56,7 +52,9 @@ class AskBirthState extends State<AskBirth>
               margin: const EdgeInsets.all(0),
               child: CalendarDatePicker(
                 initialDate: DateTime.now(),
-                firstDate: DateTime.now().subtract(const Duration(days: 130 * 365)),
+                firstDate: DateTime.now().subtract(
+                  const Duration(days: 130 * 365),
+                ),
                 lastDate: DateTime.now(),
                 onDateChanged: (date) => {
                   setState(() {
@@ -91,9 +89,10 @@ class AskBirthState extends State<AskBirth>
                 ElevatedButton(
                   onPressed: selectedDate != null && isAdult()
                       ? () {
-                          userDoc.set({
-                            'birthDate': Timestamp.fromDate(selectedDate!),
-                          }, SetOptions(merge: true));
+                          currentUserProfile()!.set(
+                            UserProfile(birthDate: selectedDate!),
+                            SetOptions(merge: true),
+                          );
                           widget.onNextPressed();
                         }
                       : null,

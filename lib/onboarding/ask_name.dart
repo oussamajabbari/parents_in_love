@@ -40,7 +40,7 @@ class AskNameState extends State<AskName>
 
     final String userUid = FirebaseAuth.instance.currentUser!.uid;
     final userDoc = FirebaseFirestore.instance
-        .collection('users_parameters')
+        .collection('users_profiles')
         .doc(userUid);
 
     return Form(

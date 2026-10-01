@@ -150,7 +150,7 @@ class AskChildCustodyState extends State<AskChildCustody>
 
     final String userUid = FirebaseAuth.instance.currentUser!.uid;
     final userDoc = FirebaseFirestore.instance
-        .collection('users_parameters')
+        .collection('users_profiles')
         .doc(userUid);
 
     return Card(
