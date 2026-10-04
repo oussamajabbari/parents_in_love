@@ -35,9 +35,9 @@ class _UploadProfilePicturesState extends State<UploadProfilePictures> {
         .doc(userUid);
 
     await userDoc.get().then((event) async {
-      final UserProfile = event.data();
-      if (UserProfile != null && UserProfile.containsKey('profilePictures')) {
-        final profilePictures = UserProfile['profilePictures'] as List<dynamic>;
+      final userProfile = event.data();
+      if (userProfile != null && userProfile.containsKey('profilePictures')) {
+        final profilePictures = userProfile['profilePictures'] as List<dynamic>;
 
         for (String profilePictureUrl in profilePictures) {
           final fileRef = storageRef.child(profilePictureUrl);
@@ -57,8 +57,6 @@ class _UploadProfilePicturesState extends State<UploadProfilePictures> {
     super.initState();
 
     //loadProfilePictures();
-
-    final storageRef = FirebaseStorage.instance.ref();
   }
 
   @override

@@ -26,6 +26,12 @@ class AskNameState extends State<AskName>
   bool enableNextButton = false;
 
   @override
+  void initState() async {
+    super.initState();
+    final user = await User.get();
+  }
+
+  @override
   void dispose() {
     myController.dispose();
     super.dispose();
@@ -37,11 +43,6 @@ class AskNameState extends State<AskName>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-
-    final String userUid = FirebaseAuth.instance.currentUser!.uid;
-    final userDoc = FirebaseFirestore.instance
-        .collection('users_profiles')
-        .doc(userUid);
 
     return Form(
       key: _formKey,

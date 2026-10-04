@@ -1,10 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:parents_in_love/theme/app_constants.dart';
-import 'package:parents_in_love/user_profile.dart';
+import 'package:parents_in_love/user.dart';
 
 class AskBirth extends StatefulWidget {
   final VoidCallback onPreviousPressed;
@@ -89,8 +88,8 @@ class AskBirthState extends State<AskBirth>
                 ElevatedButton(
                   onPressed: selectedDate != null && isAdult()
                       ? () {
-                          currentUserProfile()!.set(
-                            UserProfile(birthDate: selectedDate!),
+                          getCurrentUserDocRef()!.set(
+                            User(birthDate: selectedDate!),
                             SetOptions(merge: true),
                           );
                           widget.onNextPressed();

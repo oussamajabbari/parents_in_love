@@ -1,125 +1,10 @@
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:parents_in_love/theme/app_constants.dart';
-
-enum RepeatBase {
-  day(value: 'day'),
-  week(value: 'week');
-
-  const RepeatBase({required this.value});
-
-  final String value;
-}
-
-enum CustodyStatus {
-  noCustody,
-  recurrentCustody,
-  exceptionalCustody,
-  exceptionalNoCustody,
-}
-
-class RecurrentCustody {
-  final DateTime startDate;
-  int repeatEvery;
-  RepeatBase repeatBase;
-  DateTime? endDateExcluded;
-
-  RecurrentCustody({
-    required this.startDate,
-    required this.repeatEvery,
-    required this.repeatBase,
-  });
-
-  Map<String, dynamic> toSerializableMap() {
-    return {
-      'startDate': startDate,
-      'repeatEvery': repeatEvery,
-      'repeatBase': repeatBase.value,
-      'endDateExcluded': endDateExcluded,
-    };
-  }
-}
-
-class Custodies {
-  static List<RecurrentCustody> reccurentCustodies = [];
-  static List<DateTime> exceptionalCustodies = [];
-  static List<DateTime> exceptionalNoCustodies = [];
-
-  static bool _doesDayMatchRecurrentCustodyDefinition(
-    DateTime date,
-    RecurrentCustody reccurentCustody,
-  ) {
-    if (date.isBefore(reccurentCustody.startDate)) {
-      return false;
-    }
-
-    if (reccurentCustody.endDateExcluded != null) {
-      if (date.isAtSameMomentAs(reccurentCustody.endDateExcluded!) ||
-          date.isAfter(reccurentCustody.endDateExcluded!)) {
-        return false;
-      }
-    }
-
-    var delta = date.difference(reccurentCustody.startDate);
-    if (reccurentCustody.repeatBase == RepeatBase.day) {
-      if (delta.inDays % reccurentCustody.repeatEvery == 0) {
-        return true;
-      }
-    } else {
-      final deltaWeeks = delta.inDays / 7;
-      final deltaWeeksRemainder = delta.inDays % 7;
-      if (deltaWeeksRemainder == 0 &&
-          deltaWeeks % reccurentCustody.repeatEvery == 0) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  static CustodyStatus getCustodyStatusForDate(DateTime date) {
-    if (exceptionalCustodies.contains(date)) {
-      return .exceptionalCustody;
-    }
-    if (exceptionalNoCustodies.contains(date)) {
-      return .exceptionalNoCustody;
-    }
-
-    for (var reccurentCustody in reccurentCustodies) {
-      if (Custodies._doesDayMatchRecurrentCustodyDefinition(
-        date,
-        reccurentCustody,
-      )) {
-        return .recurrentCustody;
-      } else {
-        continue;
-      }
-    }
-
-    return .noCustody;
-  }
-
-  static Iterable<RecurrentCustody> getMatchingReccurentCustodiesForDate(
-    DateTime date,
-  ) {
-    return Custodies.reccurentCustodies.where(
-      (reccurentCustody) => Custodies._doesDayMatchRecurrentCustodyDefinition(
-        date,
-        reccurentCustody,
-      ),
-    );
-  }
-
-  static bool isEmpty() {
-    return Custodies.reccurentCustodies.isEmpty &&
-        Custodies.exceptionalCustodies.isEmpty &&
-        Custodies.exceptionalNoCustodies.isEmpty;
-  }
-}
+import 'package:parents_in_love/user.dart';
 
 class AskChildCustody extends StatefulWidget {
   final VoidCallback onPreviousPressed;
@@ -147,11 +32,6 @@ class AskChildCustodyState extends State<AskChildCustody>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-
-    final String userUid = FirebaseAuth.instance.currentUser!.uid;
-    final userDoc = FirebaseFirestore.instance
-        .collection('users_profiles')
-        .doc(userUid);
 
     return Card(
       color: Theme.of(context).colorScheme.surface,
@@ -435,11 +315,11 @@ class AskChildCustodyState extends State<AskChildCustody>
                         ),
                       );
                       if (result == 'confirm') {
-                        saveCustodies(userDoc);
+                        saveCustodies();
                         widget.onNextPressed();
                       }
                     } else {
-                      saveCustodies(userDoc);
+                      saveCustodies();
                       widget.onNextPressed();
                     }
                   },
@@ -453,8 +333,8 @@ class AskChildCustodyState extends State<AskChildCustody>
     );
   }
 
-  void saveCustodies(DocumentReference<Map<String, dynamic>> userDoc) {
-    userDoc.set({
+  void saveCustodies() {
+    getCurrentUserDocRef()!.set({
       'custodies': {
         'reccurentCustodies': Custodies.reccurentCustodies
             .map((r) => r.toSerializableMap())

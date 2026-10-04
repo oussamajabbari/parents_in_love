@@ -56,7 +56,7 @@ class _OnboardingGateState extends State<OnboardingGate> {
         } else if (!snapshot.hasData) {
           return const Text('Waiting for user doc');
         } else {
-          final UserProfile = snapshot.data!.data();
+          final userProfile = snapshot.data!.data();
           if (true) {
             return Padding(
               padding: const EdgeInsets.fromLTRB(
