@@ -3,8 +3,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:parents_in_love/models/custodies.dart';
 import 'package:parents_in_love/theme/app_constants.dart';
-import 'package:parents_in_love/user.dart';
+import 'package:parents_in_love/models/user_profile.dart';
 
 class AskChildCustody extends StatefulWidget {
   final VoidCallback onPreviousPressed;

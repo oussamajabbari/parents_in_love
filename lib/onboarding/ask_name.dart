@@ -1,7 +1,6 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:parents_in_love/theme/app_constants.dart';
+import 'package:parents_in_love/models/user_profile.dart';
 
 class AskName extends StatefulWidget {
   final VoidCallback onPreviousPressed;
@@ -24,12 +23,6 @@ class AskNameState extends State<AskName>
   final _formKey = GlobalKey<FormState>();
   final myController = TextEditingController();
   bool enableNextButton = false;
-
-  @override
-  void initState() async {
-    super.initState();
-    final user = await User.get();
-  }
 
   @override
   void dispose() {
@@ -92,12 +85,14 @@ class AskNameState extends State<AskName>
                   const SizedBox(width: 8),
                   ElevatedButton(
                     onPressed: enableNextButton
-                        ? () {
+                        ? () async {
                             FocusManager.instance.primaryFocus?.unfocus();
                             var name = myController.text.trim();
-                            userDoc.set({
-                              'name': name,
-                            }, SetOptions(merge: true));
+                            final userProfile = await UserProfile.getCurrent();
+                            final userProfileCopy = userProfile!.copyWith.name(
+                              name,
+                            );
+                            userProfileCopy.save();
                             widget.onNextPressed();
                           }
                         : null,

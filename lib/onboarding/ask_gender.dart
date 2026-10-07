@@ -1,38 +1,28 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:parents_in_love/models/user_profile.dart';
 import 'package:parents_in_love/theme/app_constants.dart';
 
-class AskSex extends StatefulWidget {
+class AskGender extends StatefulWidget {
   final VoidCallback onPreviousPressed;
   final VoidCallback onNextPressed;
 
-  const AskSex({
+  const AskGender({
     super.key,
     required this.onPreviousPressed,
     required this.onNextPressed,
   });
 
   @override
-  AskSexState createState() {
-    return AskSexState();
+  AskGenderState createState() {
+    return AskGenderState();
   }
 }
 
-enum Sex {
-  woman('woman'),
-  man('man'),
-  whatever('whatever');
-
-  const Sex(this.value);
-  final String value;
-}
-
-class AskSexState extends State<AskSex>
-    with AutomaticKeepAliveClientMixin<AskSex> {
+class AskGenderState extends State<AskGender>
+    with AutomaticKeepAliveClientMixin<AskGender> {
   bool enableNextButton = false;
-  Sex? _sex;
-  Sex? _lookinfForSex;
+  Gender? _gender;
+  Gender? _lookinfForGender;
 
   @override
   bool get wantKeepAlive => true;
@@ -40,11 +30,6 @@ class AskSexState extends State<AskSex>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-
-    final String userUid = FirebaseAuth.instance.currentUser!.uid;
-    final userDoc = FirebaseFirestore.instance
-        .collection('users_profiles')
-        .doc(userUid);
 
     return Card(
       color: Theme.of(context).colorScheme.surface,
@@ -65,22 +50,22 @@ class AskSexState extends State<AskSex>
                       color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
-                  RadioGroup<Sex>(
-                    groupValue: _sex,
-                    onChanged: (Sex? value) {
+                  RadioGroup<Gender>(
+                    groupValue: _gender,
+                    onChanged: (Gender? value) {
                       setState(() {
-                        _sex = value;
+                        _gender = value;
                       });
                     },
                     child: const Column(
                       children: <Widget>[
-                        RadioListTile<Sex>(
+                        RadioListTile<Gender>(
                           title: Text('Femme'),
-                          value: Sex.woman,
+                          value: Gender.woman,
                         ),
-                        RadioListTile<Sex>(
+                        RadioListTile<Gender>(
                           title: Text('Homme'),
-                          value: Sex.man,
+                          value: Gender.man,
                         ),
                       ],
                     ),
@@ -99,26 +84,26 @@ class AskSexState extends State<AskSex>
                       color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
-                  RadioGroup<Sex>(
-                    groupValue: _lookinfForSex,
-                    onChanged: (Sex? value) {
+                  RadioGroup<Gender>(
+                    groupValue: _lookinfForGender,
+                    onChanged: (Gender? value) {
                       setState(() {
-                        _lookinfForSex = value;
+                        _lookinfForGender = value;
                       });
                     },
                     child: const Column(
                       children: <Widget>[
-                        RadioListTile<Sex>(
+                        RadioListTile<Gender>(
                           title: Text('Une femme'),
-                          value: Sex.woman,
+                          value: Gender.woman,
                         ),
-                        RadioListTile<Sex>(
+                        RadioListTile<Gender>(
                           title: Text('Un homme'),
-                          value: Sex.man,
+                          value: Gender.man,
                         ),
-                        RadioListTile<Sex>(
+                        RadioListTile<Gender>(
                           title: Text('Pas de préférence'),
-                          value: Sex.whatever,
+                          value: Gender.whatever,
                         ),
                       ],
                     ),
@@ -137,12 +122,14 @@ class AskSexState extends State<AskSex>
                 ),
                 const SizedBox(width: 8),
                 ElevatedButton(
-                  onPressed: _sex != null && _lookinfForSex != null
-                      ? () {
-                          userDoc.set({
-                            'sex': _sex!.value,
-                            'lookingForSex': _lookinfForSex!.value,
-                          }, SetOptions(merge: true));
+                  onPressed: _gender != null && _lookinfForGender != null
+                      ? () async {
+                          final userProfile = await UserProfile.getCurrent();
+                          final userProfileCopy = userProfile!.copyWith(
+                            gender: _gender,
+                            lookingForGender: _lookinfForGender,
+                          );
+                          userProfileCopy.save();
                           widget.onNextPressed();
                         }
                       : null,

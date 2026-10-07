@@ -6,7 +6,7 @@ import 'package:parents_in_love/onboarding/accept_cookies.dart';
 import 'package:parents_in_love/onboarding/ask_birth.dart';
 import 'package:parents_in_love/onboarding/ask_child_custody.dart';
 import 'package:parents_in_love/onboarding/ask_name.dart';
-import 'package:parents_in_love/onboarding/ask_sex.dart';
+import 'package:parents_in_love/onboarding/ask_gender.dart';
 import 'package:parents_in_love/onboarding/intro.dart';
 import 'package:parents_in_love/onboarding/upload_profile_pictures.dart';
 import 'package:parents_in_love/theme/app_constants.dart';
@@ -85,7 +85,7 @@ class _OnboardingGateState extends State<OnboardingGate> {
                           onPreviousPressed: _goToPrevioustPage,
                           onNextPressed: _goToNextPage,
                         ),
-                        AskSex(
+                        AskGender(
                           onPreviousPressed: _goToPrevioustPage,
                           onNextPressed: _goToNextPage,
                         ),
