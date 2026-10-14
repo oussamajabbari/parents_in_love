@@ -1,3 +1,4 @@
+import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -28,6 +29,19 @@ class AskBirthState extends State<AskBirth>
   @override
   bool get wantKeepAlive => true;
 
+  Future<void> _loadBirthDate() async {
+    final currentUser = await UserProfile.getCurrent();
+    setState(() {
+      selectedDate = currentUser!.birthDate;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBirthDate();
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -46,17 +60,15 @@ class AskBirthState extends State<AskBirth>
                 color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
+            Text(selectedDate.toString()),
             Card(
               margin: const EdgeInsets.all(0),
-              child: CalendarDatePicker(
-                initialDate: DateTime.now(),
-                firstDate: DateTime.now().subtract(
-                  const Duration(days: 130 * 365),
-                ),
-                lastDate: DateTime.now(),
-                onDateChanged: (date) => {
+              child: CalendarDatePicker2(
+                config: CalendarDatePicker2Config(),
+                value: [selectedDate],
+                onValueChanged: (dates) => {
                   setState(() {
-                    selectedDate = date;
+                    selectedDate = dates[0];
                   }),
                 },
               ),
@@ -68,7 +80,7 @@ class AskBirthState extends State<AskBirth>
                     ).format(selectedDate!),
                   )
                 : Container(),
-            selectedDate != null && !isAdult()
+            isMinor()
                 ? const Text(
                     'Age minimum 18 ans',
                     style: TextStyle(color: Colors.red),
@@ -85,14 +97,14 @@ class AskBirthState extends State<AskBirth>
                 ),
                 const SizedBox(width: 8),
                 ElevatedButton(
-                  onPressed: selectedDate != null && isAdult()
-                      ? () async {
+                  onPressed: isMinor()
+                      ? null
+                      : () async {
                           final userProfile = await UserProfile.getCurrent();
-                          userProfile!.name = 'dffg';
+                          userProfile!.birthDate = selectedDate;
                           userProfile.save();
                           widget.onNextPressed();
-                        }
-                      : null,
+                        },
                   child: const Text('Suivant'),
                 ),
               ],
@@ -104,12 +116,12 @@ class AskBirthState extends State<AskBirth>
     );
   }
 
-  bool isAdult() {
+  bool isMinor() {
     if (kDebugMode) {
-      return selectedDate != null;
+      return selectedDate == null;
     } else {
       return selectedDate != null &&
-          selectedDate!.isBefore(
+          selectedDate!.isAfter(
             DateTime.now().subtract(const Duration(days: 18 * 365)),
           );
     }

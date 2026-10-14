@@ -73,14 +73,15 @@ class _OnboardingGateState extends State<OnboardingGate> {
                       //physics: const NeverScrollableScrollPhysics(),
                       children: [
                         Intro(onNextPressed: _goToNextPage),
-                        UploadProfilePictures(
-                          onPreviousPressed: _goToPrevioustPage,
-                          onNextPressed: _goToNextPage,
-                        ),
                         AskBirth(
                           onPreviousPressed: _goToPrevioustPage,
                           onNextPressed: _goToNextPage,
                         ),
+                        UploadProfilePictures(
+                          onPreviousPressed: _goToPrevioustPage,
+                          onNextPressed: _goToNextPage,
+                        ),
+
                         AskName(
                           onPreviousPressed: _goToPrevioustPage,
                           onNextPressed: _goToNextPage,
@@ -89,16 +90,16 @@ class _OnboardingGateState extends State<OnboardingGate> {
                           onPreviousPressed: _goToPrevioustPage,
                           onNextPressed: _goToNextPage,
                         ),
-                        AskChildCustody(
-                          onPreviousPressed: _goToPrevioustPage,
-                          onNextPressed: _goToNextPage,
-                        ),
+                        // AskChildCustody(
+                        //   onPreviousPressed: _goToPrevioustPage,
+                        //   onNextPressed: _goToNextPage,
+                        // ),
 
                         const AcceptCookies(),
                       ],
                     ),
                   ),
-                  SmoothPageIndicator(controller: _pageController, count: 7),
+                  SmoothPageIndicator(controller: _pageController, count: 6),
                 ],
               ),
             );

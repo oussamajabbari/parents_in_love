@@ -24,6 +24,21 @@ class AskGenderState extends State<AskGender>
   Gender? _gender;
   Gender? _lookinfForGender;
 
+  Future<void> _loadGender() async {
+    final userProfile = await UserProfile.getCurrent();
+    setState(() {
+      _gender = userProfile!.gender;
+      _lookinfForGender = userProfile.lookingForGender;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    _loadGender();
+  }
+
   @override
   bool get wantKeepAlive => true;
 
@@ -125,11 +140,9 @@ class AskGenderState extends State<AskGender>
                   onPressed: _gender != null && _lookinfForGender != null
                       ? () async {
                           final userProfile = await UserProfile.getCurrent();
-                          final userProfileCopy = userProfile!.copyWith(
-                            gender: _gender,
-                            lookingForGender: _lookinfForGender,
-                          );
-                          userProfileCopy.save();
+                          userProfile!.gender = _gender;
+                          userProfile.lookingForGender = _lookinfForGender;
+                          userProfile.save();
                           widget.onNextPressed();
                         }
                       : null,

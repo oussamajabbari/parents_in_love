@@ -33,6 +33,20 @@ class AskNameState extends State<AskName>
   @override
   bool get wantKeepAlive => true;
 
+  Future<void> _loadName() async {
+    final userProfile = await UserProfile.getCurrent();
+    setState(() {
+      myController.text = userProfile!.name ?? '';
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    _loadName();
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -89,10 +103,8 @@ class AskNameState extends State<AskName>
                             FocusManager.instance.primaryFocus?.unfocus();
                             var name = myController.text.trim();
                             final userProfile = await UserProfile.getCurrent();
-                            final userProfileCopy = userProfile!.copyWith.name(
-                              name,
-                            );
-                            userProfileCopy.save();
+                            userProfile!.name = name;
+                            userProfile.save();
                             widget.onNextPressed();
                           }
                         : null,

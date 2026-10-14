@@ -1,4 +1,3 @@
-import 'package:copy_with_extension/copy_with_extension.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -15,7 +14,6 @@ enum Gender {
   final String value;
 }
 
-@CopyWith()
 @JsonSerializable(explicitToJson: true)
 class UserProfile {
   String? name;
