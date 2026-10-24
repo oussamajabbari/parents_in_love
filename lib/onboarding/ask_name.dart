@@ -21,30 +21,34 @@ class AskName extends StatefulWidget {
 class AskNameState extends State<AskName>
     with AutomaticKeepAliveClientMixin<AskName> {
   final _formKey = GlobalKey<FormState>();
-  final myController = TextEditingController();
+  final nameController = TextEditingController();
   bool enableNextButton = false;
+  UserProfile? currentUser;
 
   @override
   void dispose() {
-    myController.dispose();
+    nameController.dispose();
     super.dispose();
   }
 
   @override
   bool get wantKeepAlive => true;
 
-  Future<void> _loadName() async {
-    final userProfile = await UserProfile.getCurrent();
+  void _loadCurrentUser() async {
+    final loadedCurrentUser = await UserProfile.getCurrent();
     setState(() {
-      myController.text = userProfile!.name ?? '';
+      currentUser = loadedCurrentUser;
     });
   }
 
   @override
   void initState() {
     super.initState();
-
-    _loadName();
+    _loadCurrentUser();
+    // setState(() async {
+    //   currentUser = await UserProfile.getCurrent();
+    //   nameController.text = currentUser!.name ?? '';
+    // });
   }
 
   @override
@@ -71,7 +75,7 @@ class AskNameState extends State<AskName>
                 ),
               ),
               TextFormField(
-                controller: myController,
+                controller: nameController,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Veuillez saisir votre prénom';
@@ -101,10 +105,9 @@ class AskNameState extends State<AskName>
                     onPressed: enableNextButton
                         ? () async {
                             FocusManager.instance.primaryFocus?.unfocus();
-                            var name = myController.text.trim();
-                            final userProfile = await UserProfile.getCurrent();
-                            userProfile!.name = name;
-                            userProfile.save();
+                            var name = nameController.text.trim();
+                            currentUser!.name = name;
+                            currentUser!.save();
                             widget.onNextPressed();
                           }
                         : null,

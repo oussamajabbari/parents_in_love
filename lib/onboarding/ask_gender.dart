@@ -21,22 +21,19 @@ class AskGender extends StatefulWidget {
 class AskGenderState extends State<AskGender>
     with AutomaticKeepAliveClientMixin<AskGender> {
   bool enableNextButton = false;
-  Gender? _gender;
-  Gender? _lookinfForGender;
+  UserProfile? currentUser;
 
-  Future<void> _loadGender() async {
-    final userProfile = await UserProfile.getCurrent();
+  void _loadCurrentUser() async {
+    final loadedCurrentUser = await UserProfile.getCurrent();
     setState(() {
-      _gender = userProfile!.gender;
-      _lookinfForGender = userProfile.lookingForGender;
+      currentUser = loadedCurrentUser;
     });
   }
 
   @override
   void initState() {
     super.initState();
-
-    _loadGender();
+    _loadCurrentUser();
   }
 
   @override
@@ -66,10 +63,10 @@ class AskGenderState extends State<AskGender>
                     ),
                   ),
                   RadioGroup<Gender>(
-                    groupValue: _gender,
+                    groupValue: currentUser!.gender,
                     onChanged: (Gender? value) {
                       setState(() {
-                        _gender = value;
+                        currentUser!.gender = value;
                       });
                     },
                     child: const Column(
@@ -100,10 +97,10 @@ class AskGenderState extends State<AskGender>
                     ),
                   ),
                   RadioGroup<Gender>(
-                    groupValue: _lookinfForGender,
+                    groupValue: currentUser!.lookingForGender,
                     onChanged: (Gender? value) {
                       setState(() {
-                        _lookinfForGender = value;
+                        currentUser!.lookingForGender = value;
                       });
                     },
                     child: const Column(
@@ -137,12 +134,11 @@ class AskGenderState extends State<AskGender>
                 ),
                 const SizedBox(width: 8),
                 ElevatedButton(
-                  onPressed: _gender != null && _lookinfForGender != null
+                  onPressed:
+                      currentUser!.gender != null &&
+                          currentUser!.lookingForGender != null
                       ? () async {
-                          final userProfile = await UserProfile.getCurrent();
-                          userProfile!.gender = _gender;
-                          userProfile.lookingForGender = _lookinfForGender;
-                          userProfile.save();
+                          currentUser!.save();
                           widget.onNextPressed();
                         }
                       : null,

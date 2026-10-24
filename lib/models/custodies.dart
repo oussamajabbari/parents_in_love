@@ -39,9 +39,9 @@ class RecurrentCustody {
 
 @JsonSerializable(explicitToJson: true)
 class Custodies {
-  List<RecurrentCustody> reccurentCustodies = [];
-  List<DateTime> exceptionalCustodies = [];
-  List<DateTime> exceptionalNoCustodies = [];
+  List<RecurrentCustody> reccurentCustodies;
+  List<DateTime> exceptionalCustodies;
+  List<DateTime> exceptionalNoCustodies;
 
   Custodies({
     required this.reccurentCustodies,
@@ -112,6 +112,12 @@ class Custodies {
       (reccurentCustody) =>
           _doesDayMatchRecurrentCustodyDefinition(date, reccurentCustody),
     );
+  }
+
+  void doEmpty() {
+    reccurentCustodies = [];
+    exceptionalCustodies = [];
+    exceptionalNoCustodies = [];
   }
 
   bool isEmpty() {

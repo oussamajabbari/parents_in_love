@@ -24,22 +24,22 @@ class AskBirth extends StatefulWidget {
 class AskBirthState extends State<AskBirth>
     with AutomaticKeepAliveClientMixin<AskBirth> {
   bool enableNextButton = false;
-  DateTime? selectedDate;
+  UserProfile? currentUser;
 
   @override
   bool get wantKeepAlive => true;
 
-  Future<void> _loadBirthDate() async {
-    final currentUser = await UserProfile.getCurrent();
+  void _loadCurrentUser() async {
+    final loadedCurrentUser = await UserProfile.getCurrent();
     setState(() {
-      selectedDate = currentUser!.birthDate;
+      currentUser = loadedCurrentUser;
     });
   }
 
   @override
   void initState() {
     super.initState();
-    _loadBirthDate();
+    _loadCurrentUser();
   }
 
   @override
@@ -60,24 +60,24 @@ class AskBirthState extends State<AskBirth>
                 color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
-            Text(selectedDate.toString()),
+            Text(currentUser!.birthDate.toString()),
             Card(
               margin: const EdgeInsets.all(0),
               child: CalendarDatePicker2(
                 config: CalendarDatePicker2Config(),
-                value: [selectedDate],
+                value: [currentUser!.birthDate],
                 onValueChanged: (dates) => {
                   setState(() {
-                    selectedDate = dates[0];
+                    currentUser!.birthDate = dates[0];
                   }),
                 },
               ),
             ),
-            selectedDate != null
+            currentUser!.birthDate != null
                 ? Text(
                     DateFormat.yMMMMEEEEd(
                       Localizations.localeOf(context).languageCode,
-                    ).format(selectedDate!),
+                    ).format(currentUser!.birthDate!),
                   )
                 : Container(),
             isMinor()
@@ -100,9 +100,7 @@ class AskBirthState extends State<AskBirth>
                   onPressed: isMinor()
                       ? null
                       : () async {
-                          final userProfile = await UserProfile.getCurrent();
-                          userProfile!.birthDate = selectedDate;
-                          userProfile.save();
+                          currentUser!.save();
                           widget.onNextPressed();
                         },
                   child: const Text('Suivant'),
@@ -118,10 +116,10 @@ class AskBirthState extends State<AskBirth>
 
   bool isMinor() {
     if (kDebugMode) {
-      return selectedDate == null;
+      return currentUser!.birthDate == null;
     } else {
-      return selectedDate != null &&
-          selectedDate!.isAfter(
+      return currentUser!.birthDate != null &&
+          currentUser!.birthDate!.isAfter(
             DateTime.now().subtract(const Duration(days: 18 * 365)),
           );
     }
