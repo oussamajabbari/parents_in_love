@@ -19,8 +19,7 @@ class AskName extends StatefulWidget {
   }
 }
 
-class AskNameState extends State<AskName>
-    with AutomaticKeepAliveClientMixin<AskName> {
+class AskNameState extends State<AskName> {
   final _formKey = GlobalKey<FormState>();
   final nameController = TextEditingController();
   bool enableNextButton = false;
@@ -35,12 +34,7 @@ class AskNameState extends State<AskName>
   }
 
   @override
-  bool get wantKeepAlive => true;
-
-  @override
   Widget build(BuildContext context) {
-    super.build(context);
-
     return StreamBuilder<DocumentSnapshot<UserProfile>>(
       stream: _currentUserStream,
       builder:
@@ -86,7 +80,6 @@ class AskNameState extends State<AskName>
                           color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
-                      Text(enableNextButton.toString()),
                       TextFormField(
                         controller: nameController,
                         validator: (value) {

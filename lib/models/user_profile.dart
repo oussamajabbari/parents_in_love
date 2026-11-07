@@ -7,8 +7,7 @@ part 'user_profile.g.dart';
 
 enum Gender {
   woman('woman'),
-  man('man'),
-  whatever('whatever');
+  man('man');
 
   const Gender(this.value);
   final String value;
@@ -19,16 +18,9 @@ class UserProfile {
   String? name;
   DateTime? birthDate;
   Gender? gender;
-  Gender? lookingForGender;
   Custodies? custodies;
 
-  UserProfile({
-    this.name,
-    this.birthDate,
-    this.gender,
-    this.lookingForGender,
-    this.custodies,
-  });
+  UserProfile({this.name, this.birthDate, this.gender, this.custodies});
 
   bool isMinor() {
     return birthDate != null &&

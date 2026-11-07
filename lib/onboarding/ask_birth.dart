@@ -21,8 +21,7 @@ class AskBirth extends StatefulWidget {
   }
 }
 
-class AskBirthState extends State<AskBirth>
-    with AutomaticKeepAliveClientMixin<AskBirth> {
+class AskBirthState extends State<AskBirth> {
   bool enableNextButton = false;
   final Stream<DocumentSnapshot<UserProfile>> _currentUserStream =
       UserProfile.snapshots();
@@ -30,12 +29,7 @@ class AskBirthState extends State<AskBirth>
   DateTime? birthDate;
 
   @override
-  bool get wantKeepAlive => true;
-
-  @override
   Widget build(BuildContext context) {
-    super.build(context);
-
     return Card(
       color: Theme.of(context).colorScheme.surface,
       elevation: 5,

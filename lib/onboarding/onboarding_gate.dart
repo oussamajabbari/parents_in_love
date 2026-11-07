@@ -86,10 +86,10 @@ class _OnboardingGateState extends State<OnboardingGate> {
                           onPreviousPressed: _goToPrevioustPage,
                           onNextPressed: _goToNextPage,
                         ),
-                        // AskGender(
-                        //   onPreviousPressed: _goToPrevioustPage,
-                        //   onNextPressed: _goToNextPage,
-                        // ),
+                        AskGender(
+                          onPreviousPressed: _goToPrevioustPage,
+                          onNextPressed: _goToNextPage,
+                        ),
                         // AskChildCustody(
                         //   onPreviousPressed: _goToPrevioustPage,
                         //   onNextPressed: _goToNextPage,
@@ -98,7 +98,7 @@ class _OnboardingGateState extends State<OnboardingGate> {
                       ],
                     ),
                   ),
-                  SmoothPageIndicator(controller: _pageController, count: 2),
+                  SmoothPageIndicator(controller: _pageController, count: 4),
                 ],
               ),
             );
