@@ -17,7 +17,7 @@ UserProfile _$UserProfileFromJson(Map<String, dynamic> json) =>
             ? null
             : Custodies.fromJson(json['custodies'] as Map<String, dynamic>),
       )
-      ..profilePictures = (json['profilePictures'] as List<dynamic>?)
+      ..profilePicturePaths = (json['profilePicturePaths'] as List<dynamic>?)
           ?.map((e) => e as String)
           .toList();
 
@@ -27,7 +27,7 @@ Map<String, dynamic> _$UserProfileToJson(UserProfile instance) =>
       'birthDate': instance.birthDate?.toIso8601String(),
       'gender': _$GenderEnumMap[instance.gender],
       'custodies': instance.custodies?.toJson(),
-      'profilePictures': instance.profilePictures,
+      'profilePicturePaths': instance.profilePicturePaths,
     };
 
 const _$GenderEnumMap = {Gender.woman: 'woman', Gender.man: 'man'};

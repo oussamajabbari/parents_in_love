@@ -19,7 +19,7 @@ class UserProfile {
   DateTime? birthDate;
   Gender? gender;
   Custodies? custodies;
-  List<String>? profilePictures;
+  List<String>? profilePicturePaths;
 
   UserProfile({this.name, this.birthDate, this.gender, this.custodies});
 

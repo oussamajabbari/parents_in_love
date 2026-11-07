@@ -1,11 +1,12 @@
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_cached_image/firebase_cached_image.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:parents_in_love/models/user_profile.dart';
 import 'package:parents_in_love/theme/app_constants.dart';
 import 'package:uuid/uuid.dart';
 
@@ -24,194 +25,209 @@ class UploadProfilePictures extends StatefulWidget {
 
 class _UploadProfilePicturesState extends State<UploadProfilePictures> {
   final ImagePicker _picker = ImagePicker();
-  List<XFile> pickedFiles = [];
-  List<String> profilePicturesPaths = [];
-
-  void loadProfilePictures() async {
-    final String userUid = FirebaseAuth.instance.currentUser!.uid;
-    final storageRef = FirebaseStorage.instance.ref();
-    final userDoc = FirebaseFirestore.instance
-        .collection('users_profiles')
-        .doc(userUid);
-
-    await userDoc.get().then((event) async {
-      final userProfile = event.data();
-      if (userProfile != null && userProfile.containsKey('profilePictures')) {
-        final profilePictures = userProfile['profilePictures'] as List<dynamic>;
-
-        for (String profilePictureUrl in profilePictures) {
-          final fileRef = storageRef.child(profilePictureUrl);
-          final Uint8List? data = await fileRef.getData();
-          if (data != null) {
-            setState(() {
-              pickedFiles.add(XFile.fromData(data));
-            });
-          }
-        }
-      }
-    });
-  }
-
-  @override
-  void initState() {
-    super.initState();
-
-    //loadProfilePictures();
-  }
+  final Stream<DocumentSnapshot<UserProfile>> _currentUserStream =
+      UserProfile.snapshots();
 
   @override
   Widget build(BuildContext context) {
     final String userUid = FirebaseAuth.instance.currentUser!.uid;
-    final userDoc = FirebaseFirestore.instance
-        .collection('users_profiles')
-        .doc(userUid);
     final storageRef = FirebaseStorage.instance.ref();
 
-    final List<Widget> gridItems =
-        List.from(
-          pickedFiles.map((f) {
-            return ClipRRect(
-              borderRadius: BorderRadiusGeometry.circular(12),
-              child: Image.file(File(f.path), fit: BoxFit.cover),
-            );
-          }),
-        )..add(
-          IconButton.outlined(
-            onPressed: pickedFiles.length >= 5
-                ? null
-                : () async {
-                    final XFile? pickedFile = await _picker.pickImage(
-                      source: .gallery,
-                    );
-
-                    if (pickedFile != null) {
-                      final fileNameUuid = const Uuid().v4();
-                      final String filePath =
-                          "$userUid/profilePictures/$fileNameUuid)";
-
-                      profilePicturesPaths.add(filePath);
-
-                      storageRef.child(filePath).putFile(File(pickedFile.path));
-                      userDoc.set({
-                        'profilePictures': profilePicturesPaths,
-                      }, SetOptions(merge: true));
-
-                      setState(() {
-                        pickedFiles.add(pickedFile);
-                      });
-                    }
-                  },
-            icon: const Icon(Icons.add),
-            style: ButtonStyle(
-              shape: WidgetStateProperty.all(
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-            ),
-          ),
-        );
     return Card(
       color: Theme.of(context).colorScheme.surface,
       elevation: 5,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: AppConstants.spacingLG),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            const SizedBox(height: AppConstants.spacingLG),
-            Text(
-              'Ajoutez une ou des photos de profil',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: AppConstants.spacingLG),
-            Expanded(
-              child: Column(
-                children: [
-                  GridView.count(
-                    shrinkWrap: true,
-                    mainAxisSpacing: 8,
-                    crossAxisSpacing: 8,
-                    crossAxisCount: 3,
-                    children: gridItems,
-                  ),
-                  Row(
-                    mainAxisAlignment: .end,
-                    children: [
-                      TextButton.icon(
-                        label: const Text('Effacer'),
-                        iconAlignment: .end,
-                        onPressed: pickedFiles.isEmpty
-                            ? null
-                            : () async {
-                                final result = await showDialog(
-                                  context: context,
-                                  barrierDismissible: false,
-                                  builder: (BuildContext context) => AlertDialog(
-                                    title: const Text('Tout supprimer'),
-                                    content: const Text(
-                                      'Etes-vous sûr de vouloir supprimer les photos ?',
-                                    ),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () =>
-                                            Navigator.pop(context, 'cancel'),
-                                        child: const Text('Annuler'),
-                                      ),
-                                      TextButton(
-                                        onPressed: () =>
-                                            Navigator.pop(context, 'confirm'),
-                                        child: const Text(
-                                          'Supprimer',
-                                          style: TextStyle(color: Colors.red),
+        child: StreamBuilder<DocumentSnapshot<UserProfile>>(
+          stream: _currentUserStream,
+          builder:
+              (
+                BuildContext context,
+                AsyncSnapshot<DocumentSnapshot<UserProfile>> snapshot,
+              ) {
+                if (snapshot.hasError) {
+                  return Text(snapshot.error.toString());
+                }
+                if (!snapshot.hasData) {
+                  return const CircularProgressIndicator();
+                }
+
+                final UserProfile currentUser =
+                    snapshot.data!.data() ?? UserProfile();
+
+                currentUser.profilePicturePaths =
+                    currentUser.profilePicturePaths ?? [];
+
+                return Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    const SizedBox(height: AppConstants.spacingLG),
+                    Text(
+                      'Ajoutez une ou des photos de profil',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: AppConstants.spacingLG),
+                    Expanded(
+                      child: Column(
+                        children: [
+                          GridView.count(
+                            shrinkWrap: true,
+                            mainAxisSpacing: 8,
+                            crossAxisSpacing: 8,
+                            crossAxisCount: 3,
+                            children:
+                                List.from(
+                                  currentUser.profilePicturePaths!.map((
+                                    picturePath,
+                                  ) {
+                                    return Image(
+                                      image: FirebaseImageProvider(
+                                        FirebaseUrl.fromReference(
+                                          FirebaseStorage.instance.ref(
+                                            picturePath,
+                                          ),
                                         ),
                                       ),
-                                    ],
+                                    );
+                                  }),
+                                )..add(
+                                  IconButton.outlined(
+                                    onPressed:
+                                        currentUser
+                                                .profilePicturePaths!
+                                                .length >=
+                                            5
+                                        ? null
+                                        : () async {
+                                            final XFile? pickedFile =
+                                                await _picker.pickImage(
+                                                  source: .gallery,
+                                                );
+
+                                            if (pickedFile != null) {
+                                              final fileNameUuid = const Uuid()
+                                                  .v4();
+                                              final String picturePath =
+                                                  "$userUid/profilePictures/$fileNameUuid)";
+
+                                              await storageRef
+                                                  .child(picturePath)
+                                                  .putFile(
+                                                    File(pickedFile.path),
+                                                  );
+
+                                              currentUser.profilePicturePaths!
+                                                  .add(picturePath);
+                                              currentUser.save();
+                                            }
+                                          },
+                                    icon: const Icon(Icons.add),
+                                    style: ButtonStyle(
+                                      shape: WidgetStateProperty.all(
+                                        RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
                                   ),
-                                );
-                                if (result == 'confirm') {
-                                  setState(() {
-                                    pickedFiles = [];
-                                    for (var profilePicturesPath
-                                        in profilePicturesPaths) {
-                                      storageRef
-                                          .child(profilePicturesPath)
-                                          .delete();
-                                    }
-                                    profilePicturesPaths = [];
-
-                                    userDoc.set({
-                                      'profilePictures': [],
-                                    }, SetOptions(merge: true));
-                                  });
-                                }
-                              },
-                        icon: const Icon(Icons.clear),
-                        //label: const Text('Effacer'),
-                        //iconAlignment: .end,
+                                ),
+                          ),
+                          Row(
+                            mainAxisAlignment: .end,
+                            children: [
+                              TextButton.icon(
+                                label: const Text('Effacer'),
+                                iconAlignment: .end,
+                                onPressed:
+                                    currentUser.profilePicturePaths!.isEmpty
+                                    ? null
+                                    : () async {
+                                        final result = await showDialog(
+                                          context: context,
+                                          barrierDismissible: false,
+                                          builder: (BuildContext context) =>
+                                              AlertDialog(
+                                                title: const Text(
+                                                  'Tout supprimer',
+                                                ),
+                                                content: const Text(
+                                                  'Etes-vous sûr de vouloir supprimer les photos ?',
+                                                ),
+                                                actions: [
+                                                  TextButton(
+                                                    onPressed: () =>
+                                                        Navigator.pop(
+                                                          context,
+                                                          'cancel',
+                                                        ),
+                                                    child: const Text(
+                                                      'Annuler',
+                                                    ),
+                                                  ),
+                                                  TextButton(
+                                                    onPressed: () =>
+                                                        Navigator.pop(
+                                                          context,
+                                                          'confirm',
+                                                        ),
+                                                    child: const Text(
+                                                      'Supprimer',
+                                                      style: TextStyle(
+                                                        color: Colors.red,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                        );
+                                        if (result == 'confirm') {
+                                          setState(() {
+                                            for (var profilePicturePath
+                                                in currentUser
+                                                    .profilePicturePaths!) {
+                                              storageRef
+                                                  .child(profilePicturePath)
+                                                  .delete();
+                                            }
+                                            currentUser.profilePicturePaths =
+                                                [];
+                                            currentUser.save();
+                                            FirebaseCacheManager().clearCache();
+                                          });
+                                        }
+                                      },
+                                icon: const Icon(Icons.clear),
+                                //label: const Text('Effacer'),
+                                //iconAlignment: .end,
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
+                    ),
 
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                OutlinedButton(
-                  onPressed: () => widget.onPreviousPressed(),
-                  child: const Text('Précédent'),
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: pickedFiles.isEmpty
-                      ? null
-                      : () => widget.onNextPressed(),
-                  child: const Text('Suivant'),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppConstants.spacingLG),
-          ],
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        OutlinedButton(
+                          onPressed: () => widget.onPreviousPressed(),
+                          child: const Text('Précédent'),
+                        ),
+                        const SizedBox(width: 8),
+                        ElevatedButton(
+                          onPressed: currentUser.profilePicturePaths!.isEmpty
+                              ? null
+                              : () => widget.onNextPressed(),
+                          child: const Text('Suivant'),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppConstants.spacingLG),
+                  ],
+                );
+              },
         ),
       ),
     );

@@ -49,6 +49,7 @@ dependencies:
   firebase_storage: ^13.4.4
   uuid: ^4.6.0
   json_annotation: ^4.12.0
+  firebase_cached_image: ^0.10.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

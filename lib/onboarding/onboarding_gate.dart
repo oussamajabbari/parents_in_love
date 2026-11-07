@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:parents_in_love/home.dart';
-import 'package:parents_in_love/onboarding/accept_cookies.dart';
 import 'package:parents_in_love/onboarding/ask_birth.dart';
 import 'package:parents_in_love/onboarding/ask_child_custody.dart';
 import 'package:parents_in_love/onboarding/ask_name.dart';
@@ -48,6 +47,32 @@ class _OnboardingGateState extends State<OnboardingGate> {
     final userDoc = FirebaseFirestore.instance
         .collection('users_profiles')
         .doc(userUid);
+
+    final List<Widget> onboardingPages = [
+      Intro(onNextPressed: _goToNextPage),
+      AskName(
+        onPreviousPressed: _goToPrevioustPage,
+        onNextPressed: _goToNextPage,
+      ),
+      AskGender(
+        onPreviousPressed: _goToPrevioustPage,
+        onNextPressed: _goToNextPage,
+      ),
+      AskBirth(
+        onPreviousPressed: _goToPrevioustPage,
+        onNextPressed: _goToNextPage,
+      ),
+      UploadProfilePictures(
+        onPreviousPressed: _goToPrevioustPage,
+        onNextPressed: _goToNextPage,
+      ),
+      AskChildCustody(
+        onPreviousPressed: _goToPrevioustPage,
+        onNextPressed: _goToNextPage,
+      ),
+      //const AcceptCookies(),
+    ];
+
     return StreamBuilder(
       stream: userDoc.snapshots(),
       builder: (context, snapshot) {
@@ -70,35 +95,14 @@ class _OnboardingGateState extends State<OnboardingGate> {
                   Expanded(
                     child: PageView(
                       controller: _pageController,
-                      //physics: const NeverScrollableScrollPhysics(),
-                      children: [
-                        //Intro(onNextPressed: _goToNextPage),
-                        AskBirth(
-                          onPreviousPressed: _goToPrevioustPage,
-                          onNextPressed: _goToNextPage,
-                        ),
-                        // UploadProfilePictures(
-                        //   onPreviousPressed: _goToPrevioustPage,
-                        //   onNextPressed: _goToNextPage,
-                        // ),
-
-                        AskName(
-                          onPreviousPressed: _goToPrevioustPage,
-                          onNextPressed: _goToNextPage,
-                        ),
-                        AskGender(
-                          onPreviousPressed: _goToPrevioustPage,
-                          onNextPressed: _goToNextPage,
-                        ),
-                        AskChildCustody(
-                          onPreviousPressed: _goToPrevioustPage,
-                          onNextPressed: _goToNextPage,
-                        ),
-                        const AcceptCookies(),
-                      ],
+                      physics: const NeverScrollableScrollPhysics(),
+                      children: onboardingPages,
                     ),
                   ),
-                  SmoothPageIndicator(controller: _pageController, count: 4),
+                  SmoothPageIndicator(
+                    controller: _pageController,
+                    count: onboardingPages.length,
+                  ),
                 ],
               ),
             );
