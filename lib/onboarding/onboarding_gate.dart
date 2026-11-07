@@ -90,10 +90,10 @@ class _OnboardingGateState extends State<OnboardingGate> {
                           onPreviousPressed: _goToPrevioustPage,
                           onNextPressed: _goToNextPage,
                         ),
-                        // AskChildCustody(
-                        //   onPreviousPressed: _goToPrevioustPage,
-                        //   onNextPressed: _goToNextPage,
-                        // ),
+                        AskChildCustody(
+                          onPreviousPressed: _goToPrevioustPage,
+                          onNextPressed: _goToNextPage,
+                        ),
                         const AcceptCookies(),
                       ],
                     ),

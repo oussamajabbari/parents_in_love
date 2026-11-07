@@ -1,4 +1,5 @@
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -20,263 +21,334 @@ class AskChildCustody extends StatefulWidget {
   AskChildCustodyState createState() => AskChildCustodyState();
 }
 
-class AskChildCustodyState extends State<AskChildCustody>
-    with AutomaticKeepAliveClientMixin<AskChildCustody> {
-  @override
-  bool get wantKeepAlive => true;
+class AskChildCustodyState extends State<AskChildCustody> {
   bool? previousIsReccurent;
   int? previousRepeatEvery;
   RepeatBase? previousRepeatBase;
   bool? previousDeleteAllReccurence;
-  UserProfile? currentUser;
-
-  void _loadCurrentUserAndInitCustodies() async {
-    final loadedCurrentUser = await UserProfile.getCurrentOrCreate();
-    setState(() {
-      currentUser = loadedCurrentUser;
-      if (currentUser!.custodies == null) {
-        currentUser!.custodies = Custodies(
-          reccurentCustodies: [],
-          exceptionalCustodies: [],
-          exceptionalNoCustodies: [],
-        );
-      }
-    });
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _loadCurrentUserAndInitCustodies();
-  }
+  final Stream<DocumentSnapshot<UserProfile>> _currentUserStream =
+      UserProfile.snapshots();
+  bool initDone = false;
+  Custodies custodies = Custodies(
+    reccurentCustodies: [],
+    exceptionalCustodies: [],
+    exceptionalNoCustodies: [],
+  );
 
   @override
   Widget build(BuildContext context) {
-    super.build(context);
-
     return Card(
       color: Theme.of(context).colorScheme.surface,
       elevation: 5,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: AppConstants.spacingLG),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: <Widget>[
-            const Text(
-              'À présent, définissons vos jours de garde et vos jours sans les enfants. 👶🏼',
-            ),
-            Column(
-              children: [
-                Card(
-                  margin: const EdgeInsets.all(0),
-                  child: CalendarDatePicker2(
-                    config: CalendarDatePicker2Config(
-                      firstDayOfWeek: MaterialLocalizations.of(
-                        context,
-                      ).firstDayOfWeekIndex,
-                      dayBuilder:
-                          ({
-                            required DateTime date,
-                            BoxDecoration? decoration,
-                            bool? isDisabled,
-                            bool? isSelected,
-                            bool? isToday,
-                            TextStyle? textStyle,
-                          }) {
-                            switch (currentUser!.custodies!
-                                .getCustodyStatusForDate(date)) {
-                              case .exceptionalCustody:
-                                return Container(
-                                  decoration: const BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: Colors.green,
-                                  ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(2.0),
-                                    child: Center(
-                                      child: Text(
-                                        date.day.toString(),
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              case .recurrentCustody:
-                                return Padding(
-                                  padding: const EdgeInsets.all(2.0),
-                                  child: Container(
-                                    decoration: const BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: Colors.blue,
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        date.day.toString(),
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              case .exceptionalNoCustody:
-                                return Padding(
-                                  padding: const EdgeInsets.all(2.0),
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      border: Border.all(color: Colors.blue),
-                                    ),
-                                    child: Center(
-                                      child: Text(date.day.toString()),
-                                    ),
-                                  ),
-                                );
-                              default:
-                                // Remove today outline that is misleading with "exceptional no custody"
-                                return Center(
-                                  child: Text(
-                                    date.day.toString(),
-                                    style: textStyle,
-                                  ),
-                                );
-                            }
-                          },
+        child: StreamBuilder<DocumentSnapshot<UserProfile>>(
+          stream: _currentUserStream,
+          builder:
+              (
+                BuildContext context,
+                AsyncSnapshot<DocumentSnapshot<UserProfile>> snapshot,
+              ) {
+                if (snapshot.hasError) {
+                  return Text(snapshot.error.toString());
+                }
+                if (!snapshot.hasData) {
+                  return const CircularProgressIndicator();
+                }
+
+                final UserProfile currentUser =
+                    snapshot.data!.data() ?? UserProfile();
+                if (!initDone && currentUser.custodies != null) {
+                  custodies = currentUser.custodies!;
+                }
+                initDone = true;
+
+                return Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: <Widget>[
+                    const Text(
+                      'À présent, définissons vos jours de garde et vos jours sans les enfants. 👶🏼',
                     ),
-                    value: [],
-                    onValueChanged: (dates) async {
-                      switch (currentUser!.custodies!.getCustodyStatusForDate(
-                        dates[0],
-                      )) {
-                        case .noCustody:
-                          final result = await showDialog(
-                            context: context,
-                            barrierDismissible: false,
-                            builder: (BuildContext context) =>
-                                AddCustodyDaysDialog(
-                                  startDate: dates[0],
-                                  previousIsReccurent: previousIsReccurent,
-                                  previousRepeatEvery: previousRepeatEvery,
-                                  previousRepeatBase: previousRepeatBase,
-                                ),
-                          );
-                          if (result is! String) {
-                            final (
-                              :startDate as DateTime,
-                              :isReccurent as bool,
-                              :repeatEvery as int?,
-                              :repeatBase as RepeatBase,
-                            ) = result;
-                            if (isReccurent) {
-                              currentUser!.custodies!.reccurentCustodies.add(
-                                RecurrentCustody(
-                                  startDate: startDate,
-                                  repeatEvery: repeatEvery!,
-                                  repeatBase: repeatBase,
-                                ),
-                              );
-                            } else {
-                              currentUser!.custodies!.exceptionalCustodies.add(
-                                startDate,
-                              );
-                            }
-                            previousIsReccurent = isReccurent;
-                            previousRepeatEvery = repeatEvery;
-                            previousRepeatBase = repeatBase;
-                          }
-                          // Re-trigger the drawing
-                          setState(() {});
-                        case .recurrentCustody:
-                          final result = await showDialog(
-                            context: context,
-                            barrierDismissible: false,
-                            builder: (BuildContext context) =>
-                                DeleteReccurentCustodyDayDialogState(
-                                  dateToDelete: dates[0],
-                                  previousDeleteAllReccurence:
-                                      previousDeleteAllReccurence,
-                                ),
-                          );
-                          final (
-                            :doDelete as bool,
-                            :deleteAllReccurence as bool?,
-                            :dateToDelete as DateTime?,
-                          ) = result;
-                          if (doDelete) {
-                            if (deleteAllReccurence!) {
-                              for (var reccurentCustody
-                                  in currentUser!.custodies!
-                                      .getMatchingReccurentCustodiesForDate(
+                    Column(
+                      children: [
+                        Card(
+                          margin: const EdgeInsets.all(0),
+                          child: CalendarDatePicker2(
+                            config: CalendarDatePicker2Config(
+                              firstDayOfWeek: MaterialLocalizations.of(
+                                context,
+                              ).firstDayOfWeekIndex,
+                              dayBuilder:
+                                  ({
+                                    required DateTime date,
+                                    BoxDecoration? decoration,
+                                    bool? isDisabled,
+                                    bool? isSelected,
+                                    bool? isToday,
+                                    TextStyle? textStyle,
+                                  }) {
+                                    switch (custodies.getCustodyStatusForDate(
+                                      date,
+                                    )) {
+                                      case .exceptionalCustody:
+                                        return Container(
+                                          decoration: const BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: Colors.green,
+                                          ),
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(2.0),
+                                            child: Center(
+                                              child: Text(
+                                                date.day.toString(),
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                      case .recurrentCustody:
+                                        return Padding(
+                                          padding: const EdgeInsets.all(2.0),
+                                          child: Container(
+                                            decoration: const BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              color: Colors.blue,
+                                            ),
+                                            child: Center(
+                                              child: Text(
+                                                date.day.toString(),
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                      case .exceptionalNoCustody:
+                                        return Padding(
+                                          padding: const EdgeInsets.all(2.0),
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              border: Border.all(
+                                                color: Colors.blue,
+                                              ),
+                                            ),
+                                            child: Center(
+                                              child: Text(date.day.toString()),
+                                            ),
+                                          ),
+                                        );
+                                      default:
+                                        // Remove today outline that is misleading with "exceptional no custody"
+                                        return Center(
+                                          child: Text(
+                                            date.day.toString(),
+                                            style: textStyle,
+                                          ),
+                                        );
+                                    }
+                                  },
+                            ),
+                            value: [],
+                            onValueChanged: (dates) async {
+                              switch (custodies.getCustodyStatusForDate(
+                                dates[0],
+                              )) {
+                                case .noCustody:
+                                  final result = await showDialog(
+                                    context: context,
+                                    barrierDismissible: false,
+                                    builder: (BuildContext context) =>
+                                        AddCustodyDaysDialog(
+                                          startDate: dates[0],
+                                          previousIsReccurent:
+                                              previousIsReccurent,
+                                          previousRepeatEvery:
+                                              previousRepeatEvery,
+                                          previousRepeatBase:
+                                              previousRepeatBase,
+                                        ),
+                                  );
+                                  if (result is! String) {
+                                    final (
+                                      :startDate as DateTime,
+                                      :isReccurent as bool,
+                                      :repeatEvery as int?,
+                                      :repeatBase as RepeatBase,
+                                    ) = result;
+                                    if (isReccurent) {
+                                      custodies.reccurentCustodies.add(
+                                        RecurrentCustody(
+                                          startDate: startDate,
+                                          repeatEvery: repeatEvery!,
+                                          repeatBase: repeatBase,
+                                        ),
+                                      );
+                                    } else {
+                                      custodies.exceptionalCustodies.add(
+                                        startDate,
+                                      );
+                                    }
+                                    previousIsReccurent = isReccurent;
+                                    previousRepeatEvery = repeatEvery;
+                                    previousRepeatBase = repeatBase;
+                                  }
+                                  // Re-trigger the drawing
+                                  setState(() {});
+                                case .recurrentCustody:
+                                  final result = await showDialog(
+                                    context: context,
+                                    barrierDismissible: false,
+                                    builder: (BuildContext context) =>
+                                        DeleteReccurentCustodyDayDialogState(
+                                          dateToDelete: dates[0],
+                                          previousDeleteAllReccurence:
+                                              previousDeleteAllReccurence,
+                                        ),
+                                  );
+                                  final (
+                                    :doDelete as bool,
+                                    :deleteAllReccurence as bool?,
+                                    :dateToDelete as DateTime?,
+                                  ) = result;
+                                  if (doDelete) {
+                                    if (deleteAllReccurence!) {
+                                      for (var reccurentCustody
+                                          in custodies
+                                              .getMatchingReccurentCustodiesForDate(
+                                                dateToDelete!,
+                                              )) {
+                                        reccurentCustody.endDateExcluded =
+                                            dateToDelete;
+                                      }
+                                    } else {
+                                      custodies.exceptionalNoCustodies.add(
                                         dateToDelete!,
-                                      )) {
-                                reccurentCustody.endDateExcluded = dateToDelete;
+                                      );
+                                    }
+                                    previousDeleteAllReccurence =
+                                        deleteAllReccurence;
+                                    // Re-trigger the drawing
+                                    setState(() {});
+                                  }
+                                case .exceptionalCustody:
+                                  final result = await showDialog(
+                                    context: context,
+                                    barrierDismissible: false,
+                                    builder: (BuildContext context) =>
+                                        DeleteExceptionalCustodyDayDialog(
+                                          dateToDelete: dates[0],
+                                        ),
+                                  );
+                                  if (result is DateTime) {
+                                    custodies.exceptionalCustodies.remove(
+                                      result,
+                                    );
+                                    // Re-trigger the drawing
+                                    setState(() {});
+                                  }
+                                case .exceptionalNoCustody:
+                                  final result = await showDialog(
+                                    context: context,
+                                    barrierDismissible: false,
+                                    builder: (BuildContext context) =>
+                                        DeleteExceptionalNoCustodyDayDialog(
+                                          dateToDelete: dates[0],
+                                        ),
+                                  );
+                                  if (result is DateTime) {
+                                    custodies.exceptionalNoCustodies.remove(
+                                      result,
+                                    );
+                                    // Re-trigger the drawing
+                                    setState(() {});
+                                  }
                               }
-                            } else {
-                              currentUser!.custodies!.exceptionalNoCustodies
-                                  .add(dateToDelete!);
-                            }
-                            previousDeleteAllReccurence = deleteAllReccurence;
-                            // Re-trigger the drawing
-                            setState(() {});
-                          }
-                        case .exceptionalCustody:
-                          final result = await showDialog(
-                            context: context,
-                            barrierDismissible: false,
-                            builder: (BuildContext context) =>
-                                DeleteExceptionalCustodyDayDialog(
-                                  dateToDelete: dates[0],
-                                ),
-                          );
-                          if (result is DateTime) {
-                            currentUser!.custodies!.exceptionalCustodies.remove(
-                              result,
-                            );
-                            // Re-trigger the drawing
-                            setState(() {});
-                          }
-                        case .exceptionalNoCustody:
-                          final result = await showDialog(
-                            context: context,
-                            barrierDismissible: false,
-                            builder: (BuildContext context) =>
-                                DeleteExceptionalNoCustodyDayDialog(
-                                  dateToDelete: dates[0],
-                                ),
-                          );
-                          if (result is DateTime) {
-                            currentUser!.custodies!.exceptionalNoCustodies
-                                .remove(result);
-                            // Re-trigger the drawing
-                            setState(() {});
-                          }
-                      }
-                      if (currentUser!.custodies!.getCustodyStatusForDate(
-                            dates[0],
-                          ) ==
-                          .noCustody) {}
-                    },
-                  ),
-                ),
-                const SizedBox(height: 5),
-                Row(
-                  mainAxisAlignment: .end,
-                  children: [
-                    TextButton.icon(
-                      label: const Text('Effacer'),
-                      iconAlignment: .end,
-                      onPressed: currentUser!.custodies!.isEmpty()
-                          ? null
-                          : () async {
+                              if (custodies.getCustodyStatusForDate(dates[0]) ==
+                                  .noCustody) {}
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        Row(
+                          mainAxisAlignment: .end,
+                          children: [
+                            TextButton.icon(
+                              label: const Text('Effacer'),
+                              iconAlignment: .end,
+                              onPressed: custodies.isEmpty()
+                                  ? null
+                                  : () async {
+                                      final result = await showDialog(
+                                        context: context,
+                                        barrierDismissible: false,
+                                        builder: (BuildContext context) =>
+                                            AlertDialog(
+                                              title: const Text(
+                                                'Tout supprimer',
+                                              ),
+                                              content: const Text(
+                                                'Etes-vous sûr de vouloir supprimer tous les jours de garde déjà configurés ?',
+                                              ),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed: () =>
+                                                      Navigator.pop(
+                                                        context,
+                                                        'cancel',
+                                                      ),
+                                                  child: const Text('Annuler'),
+                                                ),
+                                                TextButton(
+                                                  onPressed: () =>
+                                                      Navigator.pop(
+                                                        context,
+                                                        'confirm',
+                                                      ),
+                                                  child: const Text(
+                                                    'Supprimer',
+                                                    style: TextStyle(
+                                                      color: Colors.red,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                      );
+                                      if (result == 'confirm') {
+                                        setState(() {
+                                          custodies.doEmpty();
+                                        });
+                                      }
+                                    },
+                              icon: const Icon(Icons.clear),
+                              //label: const Text('Effacer'),
+                              //iconAlignment: .end,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        OutlinedButton(
+                          onPressed: () => widget.onPreviousPressed(),
+                          child: const Text('Précédent'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () async {
+                            if (custodies.isEmpty()) {
                               final result = await showDialog(
                                 context: context,
                                 barrierDismissible: false,
                                 builder: (BuildContext context) => AlertDialog(
-                                  title: const Text('Tout supprimer'),
+                                  title: const Text('Calendrier vide'),
                                   content: const Text(
-                                    'Etes-vous sûr de vouloir supprimer tous les jours de garde déjà configurés ?',
+                                    "Vous n'avez pas saisi de jours de garde, confirmer et continuer quand même ?",
                                   ),
                                   actions: [
                                     TextButton(
@@ -287,73 +359,29 @@ class AskChildCustodyState extends State<AskChildCustody>
                                     TextButton(
                                       onPressed: () =>
                                           Navigator.pop(context, 'confirm'),
-                                      child: const Text(
-                                        'Supprimer',
-                                        style: TextStyle(color: Colors.red),
-                                      ),
+                                      child: const Text('Confirmer'),
                                     ),
                                   ],
                                 ),
                               );
                               if (result == 'confirm') {
-                                setState(() {
-                                  currentUser!.custodies!.doEmpty();
-                                });
+                                currentUser.custodies = custodies;
+                                currentUser.save();
+                                widget.onNextPressed();
                               }
-                            },
-                      icon: const Icon(Icons.clear),
-                      //label: const Text('Effacer'),
-                      //iconAlignment: .end,
+                            } else {
+                              currentUser.custodies = custodies;
+                              currentUser.save();
+                              widget.onNextPressed();
+                            }
+                          },
+                          child: const Text('Suivant'),
+                        ),
+                      ],
                     ),
                   ],
-                ),
-              ],
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                OutlinedButton(
-                  onPressed: () => widget.onPreviousPressed(),
-                  child: const Text('Précédent'),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    if (currentUser!.custodies!.isEmpty()) {
-                      final result = await showDialog(
-                        context: context,
-                        barrierDismissible: false,
-                        builder: (BuildContext context) => AlertDialog(
-                          title: const Text('Calendrier vide'),
-                          content: const Text(
-                            "Vous n'avez pas saisi de jours de garde, confirmer et continuer quand même ?",
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, 'cancel'),
-                              child: const Text('Annuler'),
-                            ),
-                            TextButton(
-                              onPressed: () =>
-                                  Navigator.pop(context, 'confirm'),
-                              child: const Text('Confirmer'),
-                            ),
-                          ],
-                        ),
-                      );
-                      if (result == 'confirm') {
-                        currentUser!.save();
-                        widget.onNextPressed();
-                      }
-                    } else {
-                      currentUser!.save();
-                      widget.onNextPressed();
-                    }
-                  },
-                  child: const Text('Suivant'),
-                ),
-              ],
-            ),
-          ],
+                );
+              },
         ),
       ),
     );
