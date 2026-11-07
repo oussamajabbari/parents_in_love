@@ -31,7 +31,7 @@ class AskChildCustodyState extends State<AskChildCustody>
   UserProfile? currentUser;
 
   void _loadCurrentUserAndInitCustodies() async {
-    final loadedCurrentUser = await UserProfile.getCurrent();
+    final loadedCurrentUser = await UserProfile.getCurrentOrCreate();
     setState(() {
       currentUser = loadedCurrentUser;
       if (currentUser!.custodies == null) {

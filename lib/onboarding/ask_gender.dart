@@ -24,7 +24,7 @@ class AskGenderState extends State<AskGender>
   UserProfile? currentUser;
 
   void _loadCurrentUser() async {
-    final loadedCurrentUser = await UserProfile.getCurrent();
+    final loadedCurrentUser = await UserProfile.getCurrentOrCreate();
     setState(() {
       currentUser = loadedCurrentUser;
     });

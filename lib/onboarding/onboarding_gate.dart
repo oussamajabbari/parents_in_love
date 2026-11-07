@@ -56,7 +56,7 @@ class _OnboardingGateState extends State<OnboardingGate> {
         } else if (!snapshot.hasData) {
           return const Text('Waiting for user doc');
         } else {
-          final userProfile = snapshot.data!.data();
+          //final userProfile = snapshot.data!.data();
           if (true) {
             return Padding(
               padding: const EdgeInsets.fromLTRB(
@@ -72,34 +72,33 @@ class _OnboardingGateState extends State<OnboardingGate> {
                       controller: _pageController,
                       //physics: const NeverScrollableScrollPhysics(),
                       children: [
-                        Intro(onNextPressed: _goToNextPage),
+                        //Intro(onNextPressed: _goToNextPage),
                         AskBirth(
                           onPreviousPressed: _goToPrevioustPage,
                           onNextPressed: _goToNextPage,
                         ),
-                        UploadProfilePictures(
-                          onPreviousPressed: _goToPrevioustPage,
-                          onNextPressed: _goToNextPage,
-                        ),
+                        // UploadProfilePictures(
+                        //   onPreviousPressed: _goToPrevioustPage,
+                        //   onNextPressed: _goToNextPage,
+                        // ),
 
                         AskName(
                           onPreviousPressed: _goToPrevioustPage,
                           onNextPressed: _goToNextPage,
                         ),
-                        AskGender(
-                          onPreviousPressed: _goToPrevioustPage,
-                          onNextPressed: _goToNextPage,
-                        ),
+                        // AskGender(
+                        //   onPreviousPressed: _goToPrevioustPage,
+                        //   onNextPressed: _goToNextPage,
+                        // ),
                         // AskChildCustody(
                         //   onPreviousPressed: _goToPrevioustPage,
                         //   onNextPressed: _goToNextPage,
                         // ),
-
                         const AcceptCookies(),
                       ],
                     ),
                   ),
-                  SmoothPageIndicator(controller: _pageController, count: 6),
+                  SmoothPageIndicator(controller: _pageController, count: 2),
                 ],
               ),
             );

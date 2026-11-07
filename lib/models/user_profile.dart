@@ -30,6 +30,13 @@ class UserProfile {
     this.custodies,
   });
 
+  bool isMinor() {
+    return birthDate != null &&
+        birthDate!.isAfter(
+          DateTime.now().subtract(const Duration(days: 18 * 365)),
+        );
+  }
+
   factory UserProfile.fromFirestore(
     DocumentSnapshot<Map<String, dynamic>> snapshot,
     SnapshotOptions? options,
@@ -50,9 +57,10 @@ class UserProfile {
   static Stream<DocumentSnapshot<UserProfile>> snapshots() =>
       _getCurrentUserProfileDocRef().snapshots();
 
-  static Future<UserProfile?> getCurrent() async {
+  static Future<UserProfile> getCurrentOrCreate() async {
     final userProfileSnapshot = await _getCurrentUserProfileDocRef().get();
-    return userProfileSnapshot.data();
+    final userProfile = userProfileSnapshot.data();
+    return userProfile ?? UserProfile();
   }
 
   Future<void> save() => _getCurrentUserProfileDocRef().set(this);
