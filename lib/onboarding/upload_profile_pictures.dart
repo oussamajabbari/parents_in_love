@@ -219,7 +219,13 @@ class _UploadProfilePicturesState extends State<UploadProfilePictures> {
                         ElevatedButton(
                           onPressed: currentUser.profilePicturePaths!.isEmpty
                               ? null
-                              : () => widget.onNextPressed(),
+                              : () {
+                                  // This is the last step, mark onboarding as done
+                                  currentUser.onboardingDone = true;
+                                  currentUser.save();
+
+                                  widget.onNextPressed();
+                                },
                           child: const Text('Suivant'),
                         ),
                       ],

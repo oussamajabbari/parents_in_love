@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:parents_in_love/home.dart';
+import 'package:parents_in_love/models/user_profile.dart';
 import 'package:parents_in_love/onboarding/ask_birth.dart';
 import 'package:parents_in_love/onboarding/ask_child_custody.dart';
 import 'package:parents_in_love/onboarding/ask_name.dart';
@@ -20,6 +21,8 @@ class OnboardingGate extends StatefulWidget {
 
 class _OnboardingGateState extends State<OnboardingGate> {
   final PageController _pageController = PageController();
+  final Stream<DocumentSnapshot<UserProfile>> _currentUserStream =
+      UserProfile.snapshots();
 
   @override
   void dispose() {
@@ -43,11 +46,6 @@ class _OnboardingGateState extends State<OnboardingGate> {
 
   @override
   Widget build(BuildContext context) {
-    final String userUid = FirebaseAuth.instance.currentUser!.uid;
-    final userDoc = FirebaseFirestore.instance
-        .collection('users_profiles')
-        .doc(userUid);
-
     final List<Widget> onboardingPages = [
       Intro(onNextPressed: _goToNextPage),
       AskName(
@@ -62,55 +60,63 @@ class _OnboardingGateState extends State<OnboardingGate> {
         onPreviousPressed: _goToPrevioustPage,
         onNextPressed: _goToNextPage,
       ),
-      UploadProfilePictures(
+      AskChildCustody(
         onPreviousPressed: _goToPrevioustPage,
         onNextPressed: _goToNextPage,
       ),
-      AskChildCustody(
+      UploadProfilePictures(
         onPreviousPressed: _goToPrevioustPage,
         onNextPressed: _goToNextPage,
       ),
       //const AcceptCookies(),
     ];
 
-    return StreamBuilder(
-      stream: userDoc.snapshots(),
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return const Text('Auth stream error !');
-        } else if (!snapshot.hasData) {
-          return const Text('Waiting for user doc');
-        } else {
-          //final userProfile = snapshot.data!.data();
-          if (true) {
-            return Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppConstants.spacingSM,
-                0,
-                AppConstants.spacingSM,
-                AppConstants.spacingMD,
-              ),
-              child: Column(
-                children: [
-                  Expanded(
-                    child: PageView(
-                      controller: _pageController,
-                      physics: const NeverScrollableScrollPhysics(),
-                      children: onboardingPages,
+    return StreamBuilder<DocumentSnapshot<UserProfile>>(
+      stream: _currentUserStream,
+      builder:
+          (
+            BuildContext context,
+            AsyncSnapshot<DocumentSnapshot<UserProfile>> snapshot,
+          ) {
+            if (snapshot.hasError) {
+              return const Text('Auth stream error !');
+            } else if (!snapshot.hasData) {
+              return const Text('Waiting for user doc');
+            }
+
+            final UserProfile currentUser =
+                snapshot.data!.data() ?? UserProfile();
+
+            currentUser.onboardingDone = currentUser.onboardingDone ?? false;
+
+            if (!currentUser.onboardingDone!) {
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppConstants.spacingSM,
+                  0,
+                  AppConstants.spacingSM,
+                  AppConstants.spacingMD,
+                ),
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: PageView(
+                        controller: _pageController,
+                        physics: const NeverScrollableScrollPhysics(),
+                        children: onboardingPages,
+                      ),
                     ),
-                  ),
-                  SmoothPageIndicator(
-                    controller: _pageController,
-                    count: onboardingPages.length,
-                  ),
-                ],
-              ),
-            );
-          } else {
-            return const Home();
-          }
-        }
-      },
+                    SmoothPageIndicator(
+                      controller: _pageController,
+                      count: onboardingPages.length,
+                    ),
+                  ],
+                ),
+              );
+            } else {
+              return const Home();
+            }
+          },
     );
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:json_annotation/json_annotation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -20,8 +22,16 @@ class UserProfile {
   Gender? gender;
   Custodies? custodies;
   List<String>? profilePicturePaths;
+  bool? onboardingDone;
 
-  UserProfile({this.name, this.birthDate, this.gender, this.custodies});
+  UserProfile({
+    this.name,
+    this.birthDate,
+    this.gender,
+    this.custodies,
+    this.profilePicturePaths,
+    this.onboardingDone,
+  });
 
   bool isMinor() {
     return birthDate != null &&

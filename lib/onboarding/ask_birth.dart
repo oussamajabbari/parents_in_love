@@ -67,7 +67,6 @@ class AskBirthState extends State<AskBirth> {
                         color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
-                    Text(birthDate.toString()),
                     Card(
                       margin: const EdgeInsets.all(0),
                       child: CalendarDatePicker2(
