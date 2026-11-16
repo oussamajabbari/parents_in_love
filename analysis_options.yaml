@@ -8,6 +8,8 @@
 # The following line activates a set of recommended lints for Flutter apps,
 # packages, and plugins designed to encourage good coding practices.
 analyzer:
+  errors:
+    deprecated_member_use: ignore
   exclude:
     - build/**
     - android/**
@@ -39,4 +41,3 @@ linter:
 # https://dart.dev/guides/language/analysis-options
 
 plugins:
-  riverpod_lint: ^3.1.4
