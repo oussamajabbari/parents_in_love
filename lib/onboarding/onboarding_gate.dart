@@ -4,6 +4,7 @@ import 'package:parents_in_love/home.dart';
 import 'package:parents_in_love/models/user_profile.dart';
 import 'package:parents_in_love/onboarding/ask_birth.dart';
 import 'package:parents_in_love/onboarding/ask_child_custody.dart';
+import 'package:parents_in_love/onboarding/ask_description.dart';
 import 'package:parents_in_love/onboarding/ask_name.dart';
 import 'package:parents_in_love/onboarding/ask_gender.dart';
 import 'package:parents_in_love/onboarding/intro.dart';
@@ -64,6 +65,10 @@ class _OnboardingGateState extends State<OnboardingGate> {
         onNextPressed: _goToNextPage,
       ),
       UploadProfilePictures(
+        onPreviousPressed: _goToPrevioustPage,
+        onNextPressed: _goToNextPage,
+      ),
+      AskDescription(
         onPreviousPressed: _goToPrevioustPage,
         onNextPressed: _goToNextPage,
       ),

@@ -18,6 +18,7 @@ UserProfile _$UserProfileFromJson(Map<String, dynamic> json) => UserProfile(
   profilePicturePaths: (json['profilePicturePaths'] as List<dynamic>?)
       ?.map((e) => e as String)
       .toList(),
+  description: json['description'] as String?,
   onboardingDone: json['onboardingDone'] as bool?,
 );
 
@@ -28,6 +29,7 @@ Map<String, dynamic> _$UserProfileToJson(UserProfile instance) =>
       'gender': _$GenderEnumMap[instance.gender],
       'custodies': instance.custodies?.toJson(),
       'profilePicturePaths': instance.profilePicturePaths,
+      'description': instance.description,
       'onboardingDone': instance.onboardingDone,
     };
 

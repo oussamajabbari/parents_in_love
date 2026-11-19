@@ -20,6 +20,7 @@ class UserProfile {
   Gender? gender;
   Custodies? custodies;
   List<String>? profilePicturePaths;
+  String? description;
   bool? onboardingDone;
 
   UserProfile({
@@ -28,15 +29,9 @@ class UserProfile {
     this.gender,
     this.custodies,
     this.profilePicturePaths,
+    this.description,
     this.onboardingDone,
   });
-
-  bool isMinor() {
-    return birthDate != null &&
-        birthDate!.isAfter(
-          DateTime.now().subtract(const Duration(days: 18 * 365)),
-        );
-  }
 
   factory UserProfile.fromFirestore(
     DocumentSnapshot<Map<String, dynamic>> snapshot,

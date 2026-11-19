@@ -5,6 +5,12 @@ import 'package:intl/intl.dart';
 import 'package:parents_in_love/theme/app_constants.dart';
 import 'package:parents_in_love/models/user_profile.dart';
 
+bool _isMinor(DateTime birthDate) {
+  return birthDate.isAfter(
+    DateTime.now().subtract(const Duration(days: 18 * 365)),
+  );
+}
+
 class AskBirth extends StatefulWidget {
   final VoidCallback onPreviousPressed;
   final VoidCallback onNextPressed;
@@ -86,7 +92,7 @@ class AskBirthState extends State<AskBirth> {
                             ).format(birthDate!),
                           )
                         : Container(),
-                    currentUser.isMinor()
+                    birthDate != null && _isMinor(birthDate!)
                         ? const Text(
                             'Age minimum 18 ans',
                             style: TextStyle(color: Colors.red),
@@ -103,7 +109,7 @@ class AskBirthState extends State<AskBirth> {
                         ),
                         const SizedBox(width: 8),
                         ElevatedButton(
-                          onPressed: birthDate == null || currentUser.isMinor()
+                          onPressed: birthDate == null || _isMinor(birthDate!)
                               ? null
                               : () async {
                                   currentUser.birthDate = birthDate;

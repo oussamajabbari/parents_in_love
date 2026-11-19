@@ -199,8 +199,6 @@ class _UploadProfilePicturesState extends State<UploadProfilePictures> {
                                         }
                                       },
                                 icon: const Icon(Icons.clear),
-                                //label: const Text('Effacer'),
-                                //iconAlignment: .end,
                               ),
                             ],
                           ),
@@ -220,10 +218,6 @@ class _UploadProfilePicturesState extends State<UploadProfilePictures> {
                           onPressed: currentUser.profilePicturePaths!.isEmpty
                               ? null
                               : () {
-                                  // This is the last step, mark onboarding as done
-                                  currentUser.onboardingDone = true;
-                                  currentUser.save();
-
                                   widget.onNextPressed();
                                 },
                           child: const Text('Suivant'),
