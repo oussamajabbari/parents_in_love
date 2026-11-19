@@ -16,6 +16,7 @@ Future<Position> determinePosition() async {
     // Location services are not enabled don't continue
     // accessing the position and request users of the
     // App to enable the location services.
+    await Geolocator.openLocationSettings();
     return Future.error('Location services are disabled.');
   }
 
@@ -41,5 +42,11 @@ Future<Position> determinePosition() async {
 
   // When we reach here, permissions are granted and we can
   // continue accessing the position of the device.
-  return await Geolocator.getCurrentPosition();
+  const LocationSettings locationSettings = LocationSettings(
+    accuracy: LocationAccuracy.low,
+    distanceFilter: 100,
+  );
+  return await Geolocator.getCurrentPosition(
+    locationSettings: locationSettings,
+  );
 }
