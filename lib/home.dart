@@ -18,22 +18,22 @@ class _HomeState extends State<Home> {
     return Column(
       children: [
         const Text('Home'),
-        FutureBuilder(
-          future: _determinePosition,
-          builder: (BuildContext context, AsyncSnapshot<Position> snapshot) {
-            if (snapshot.hasError) {
-              final error = snapshot.error;
-              return Text('Failed to retrieve position ! : $error');
-            } else if (snapshot.hasData) {
-              double? altitude = snapshot.data?.longitude;
-              return altitude != null
-                  ? Text(altitude.toString())
-                  : const Text('no altitude');
-            } else {
-              return const Text('loading');
-            }
-          },
-        ),
+        // FutureBuilder(
+        //   future: _determinePosition,
+        //   builder: (BuildContext context, AsyncSnapshot<Position> snapshot) {
+        //     if (snapshot.hasError) {
+        //       final error = snapshot.error;
+        //       return Text('Failed to retrieve position ! : $error');
+        //     } else if (snapshot.hasData) {
+        //       double? altitude = snapshot.data?.longitude;
+        //       return altitude != null
+        //           ? Text(altitude.toString())
+        //           : const Text('no altitude');
+        //     } else {
+        //       return const Text('loading');
+        //     }
+        //   },
+        // ),
         ElevatedButton(
           onPressed: () => {FirebaseAuth.instance.signOut()},
           child: const Text('Sign Out'),

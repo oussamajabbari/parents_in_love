@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:parents_in_love/home.dart';
+import 'package:parents_in_love/location_gate.dart';
 import 'package:parents_in_love/models/user_profile.dart';
 import 'package:parents_in_love/onboarding/ask_birth.dart';
 import 'package:parents_in_love/onboarding/ask_child_custody.dart';
@@ -118,7 +118,7 @@ class _OnboardingGateState extends State<OnboardingGate> {
                 ),
               );
             } else {
-              return const Home();
+              return const LocationGate();
             }
           },
     );

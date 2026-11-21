@@ -6,7 +6,13 @@ import 'package:parents_in_love/theme/app_constants.dart';
 
 Future<void> reloadUserAuth() async {
   if (FirebaseAuth.instance.currentUser != null) {
-    return FirebaseAuth.instance.currentUser!.reload();
+    try {
+      await FirebaseAuth.instance.currentUser!.reload();
+    } on FirebaseAuthException catch (e) {
+      if (e.message != null && e.message!.contains('INVALID_REFRESH_TOKEN')) {
+        await FirebaseAuth.instance.signOut();
+      }
+    }
   }
 }
 
@@ -21,12 +27,10 @@ class _AuthGateState extends State<AuthGate> {
   final Stream<User?> _authStateChanges = FirebaseAuth.instance
       .authStateChanges();
 
-  final Future<void> _reloadUserAuth = reloadUserAuth();
-
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-      future: _reloadUserAuth,
+      future: reloadUserAuth(),
       builder: (context, snapshot) {
         return StreamBuilder(
           stream: _authStateChanges,
