@@ -107,7 +107,7 @@ class AskGenderState extends State<AskGender> {
                           onPressed: gender != null
                               ? () async {
                                   currentUser.gender = gender;
-                                  currentUser.save();
+                                  await currentUser.save();
                                   widget.onNextPressed();
                                 }
                               : null,

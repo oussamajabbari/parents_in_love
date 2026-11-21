@@ -113,7 +113,7 @@ class AskBirthState extends State<AskBirth> {
                               ? null
                               : () async {
                                   currentUser.birthDate = birthDate;
-                                  currentUser.save();
+                                  await currentUser.save();
                                   widget.onNextPressed();
                                 },
                           child: const Text('Suivant'),

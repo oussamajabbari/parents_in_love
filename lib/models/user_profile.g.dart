@@ -19,6 +19,10 @@ UserProfile _$UserProfileFromJson(Map<String, dynamic> json) => UserProfile(
       ?.map((e) => e as String)
       .toList(),
   description: json['description'] as String?,
+  lastKnownPosition: _$JsonConverterFromJson<GeoPoint, GeoPoint>(
+    json['lastKnownPosition'],
+    const GeoPointConverter().fromJson,
+  ),
   onboardingDone: json['onboardingDone'] as bool?,
 );
 
@@ -30,7 +34,21 @@ Map<String, dynamic> _$UserProfileToJson(UserProfile instance) =>
       'custodies': instance.custodies?.toJson(),
       'profilePicturePaths': instance.profilePicturePaths,
       'description': instance.description,
+      'lastKnownPosition': _$JsonConverterToJson<GeoPoint, GeoPoint>(
+        instance.lastKnownPosition,
+        const GeoPointConverter().toJson,
+      ),
       'onboardingDone': instance.onboardingDone,
     };
 
 const _$GenderEnumMap = {Gender.woman: 'woman', Gender.man: 'man'};
+
+Value? _$JsonConverterFromJson<Json, Value>(
+  Object? json,
+  Value? Function(Json json) fromJson,
+) => json == null ? null : fromJson(json as Json);
+
+Json? _$JsonConverterToJson<Json, Value>(
+  Value? value,
+  Json? Function(Value value) toJson,
+) => value == null ? null : toJson(value);

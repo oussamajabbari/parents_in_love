@@ -366,12 +366,12 @@ class AskChildCustodyState extends State<AskChildCustody> {
                               );
                               if (result == 'confirm') {
                                 currentUser.custodies = custodies;
-                                currentUser.save();
+                                await currentUser.save();
                                 widget.onNextPressed();
                               }
                             } else {
                               currentUser.custodies = custodies;
-                              currentUser.save();
+                              await currentUser.save();
                               widget.onNextPressed();
                             }
                           },

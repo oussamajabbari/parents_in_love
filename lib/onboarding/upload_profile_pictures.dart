@@ -118,7 +118,7 @@ class _UploadProfilePicturesState extends State<UploadProfilePictures> {
 
                                               currentUser.profilePicturePaths!
                                                   .add(picturePath);
-                                              currentUser.save();
+                                              await currentUser.save();
                                             }
                                           },
                                     icon: const Icon(Icons.add),
@@ -183,18 +183,19 @@ class _UploadProfilePicturesState extends State<UploadProfilePictures> {
                                               ),
                                         );
                                         if (result == 'confirm') {
-                                          setState(() {
+                                          setState(() async {
                                             for (var profilePicturePath
                                                 in currentUser
                                                     .profilePicturePaths!) {
-                                              storageRef
+                                              await storageRef
                                                   .child(profilePicturePath)
                                                   .delete();
                                             }
                                             currentUser.profilePicturePaths =
                                                 [];
-                                            currentUser.save();
-                                            FirebaseCacheManager().clearCache();
+                                            await currentUser.save();
+                                            await FirebaseCacheManager()
+                                                .clearCache();
                                           });
                                         }
                                       },

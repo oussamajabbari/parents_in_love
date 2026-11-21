@@ -114,7 +114,7 @@ class AskNameState extends State<AskName> {
                                         ?.unfocus();
                                     var name = nameController.text.trim();
                                     currentUser.name = name;
-                                    currentUser.save();
+                                    await currentUser.save();
                                     widget.onNextPressed();
                                   }
                                 : null,

@@ -110,8 +110,7 @@ class AskDescriptionState extends State<AskDescription> {
                                 _descriptionController.text;
                             // This is the last step, mark onboarding as done
                             currentUser.onboardingDone = true;
-                            currentUser.save();
-                            widget.onNextPressed();
+                            await currentUser.save();
                           },
                           child: const Text("C'est parti ! 🚀"),
                         ),

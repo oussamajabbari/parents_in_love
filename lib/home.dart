@@ -1,7 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:parents_in_love/position.dart';
+import 'package:parents_in_love/models/user_profile.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -11,29 +10,26 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  final Future<Position> _determinePosition = determinePosition();
+  final Future<UserProfile> _currentUser = UserProfile.getCurrentOrCreate();
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
         const Text('Home'),
-        // FutureBuilder(
-        //   future: _determinePosition,
-        //   builder: (BuildContext context, AsyncSnapshot<Position> snapshot) {
-        //     if (snapshot.hasError) {
-        //       final error = snapshot.error;
-        //       return Text('Failed to retrieve position ! : $error');
-        //     } else if (snapshot.hasData) {
-        //       double? altitude = snapshot.data?.longitude;
-        //       return altitude != null
-        //           ? Text(altitude.toString())
-        //           : const Text('no altitude');
-        //     } else {
-        //       return const Text('loading');
-        //     }
-        //   },
-        // ),
+        FutureBuilder<UserProfile>(
+          future: _currentUser,
+          builder: (BuildContext context, AsyncSnapshot<UserProfile> snapshot) {
+            if (snapshot.hasError) {
+              return Text(snapshot.error.toString());
+            }
+            if (!snapshot.hasData) {
+              return const CircularProgressIndicator();
+            }
+            final UserProfile userProfile = snapshot.data!;
+            return Text(userProfile.toFirestore().toString());
+          },
+        ),
         ElevatedButton(
           onPressed: () => {FirebaseAuth.instance.signOut()},
           child: const Text('Sign Out'),

@@ -13,6 +13,15 @@ enum Gender {
   final String value;
 }
 
+class GeoPointConverter extends JsonConverter<GeoPoint, GeoPoint> {
+  const GeoPointConverter();
+  @override
+  GeoPoint fromJson(GeoPoint json) => json;
+
+  @override
+  GeoPoint toJson(GeoPoint object) => object;
+}
+
 @JsonSerializable(explicitToJson: true)
 class UserProfile {
   String? name;
@@ -21,6 +30,9 @@ class UserProfile {
   Custodies? custodies;
   List<String>? profilePicturePaths;
   String? description;
+
+  @GeoPointConverter()
+  GeoPoint? lastKnownPosition;
   bool? onboardingDone;
 
   UserProfile({
@@ -30,6 +42,7 @@ class UserProfile {
     this.custodies,
     this.profilePicturePaths,
     this.description,
+    this.lastKnownPosition,
     this.onboardingDone,
   });
 

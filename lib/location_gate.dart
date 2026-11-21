@@ -1,8 +1,10 @@
 import 'dart:async';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:parents_in_love/home.dart';
+import 'package:parents_in_love/models/user_profile.dart';
 
 Future<LocationPermission> checkAndRequestLocationPermission() async {
   LocationPermission permission;
@@ -15,6 +17,33 @@ Future<LocationPermission> checkAndRequestLocationPermission() async {
   return permission;
 }
 
+Future<void> determinePositionAndSave() async {
+  const LocationSettings locationSettings = LocationSettings(
+    accuracy: LocationAccuracy.low,
+    distanceFilter: 100,
+  );
+
+  final lastKnownPosition = await Geolocator.getLastKnownPosition();
+  late final Position position;
+
+  if (lastKnownPosition != null) {
+    position = await Geolocator.getCurrentPosition(
+      locationSettings: locationSettings,
+    ).timeout(const Duration(seconds: 2), onTimeout: () => lastKnownPosition);
+  } else {
+    position = await Geolocator.getCurrentPosition(
+      locationSettings: locationSettings,
+    );
+  }
+
+  UserProfile userProfile = await UserProfile.getCurrentOrCreate();
+  userProfile.lastKnownPosition = GeoPoint(
+    position.latitude,
+    position.longitude,
+  );
+  await userProfile.save();
+}
+
 class LocationGate extends StatefulWidget {
   const LocationGate({super.key});
 
@@ -25,26 +54,25 @@ class LocationGate extends StatefulWidget {
 class _LocationGateState extends State<LocationGate> {
   Future<LocationPermission> _checkAndRequestLocationPermission =
       checkAndRequestLocationPermission();
-  bool isTimerRunning = false;
+  bool isLocationSettingsCheckTimerRunning = false;
 
-  void openAppSettingsAndCheck() {
-    if (!isTimerRunning) {
-      isTimerRunning = true;
+  void openAppSettingsAndCheck() async {
+    if (!isLocationSettingsCheckTimerRunning) {
+      isLocationSettingsCheckTimerRunning = true;
       // Start timer to periodically check permission
       Timer.periodic(const Duration(seconds: 1), (timer) async {
         LocationPermission permission = await Geolocator.checkPermission();
         if (permission == .always || permission == .whileInUse) {
           timer.cancel();
           setState(() {
-            isTimerRunning = false;
+            isLocationSettingsCheckTimerRunning = false;
             _checkAndRequestLocationPermission =
                 checkAndRequestLocationPermission();
           });
         }
       });
     }
-
-    Geolocator.openAppSettings();
+    await Geolocator.openAppSettings();
   }
 
   @override
@@ -91,7 +119,15 @@ class _LocationGateState extends State<LocationGate> {
           default:
         }
 
-        return const Home();
+        return FutureBuilder<void>(
+          future: determinePositionAndSave(),
+          builder: (BuildContext context, AsyncSnapshot<void> snapshot) {
+            if (snapshot.hasError) {
+              return Text(snapshot.error.toString());
+            }
+            return const Home();
+          },
+        );
       },
     );
   }
